@@ -51,3 +51,6 @@ logs/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# ChromaDB in-memory artifacts
+:memory/
