@@ -54,3 +54,4 @@ htmlcov/
 
 # ChromaDB in-memory artifacts
 :memory/
+:memory/
