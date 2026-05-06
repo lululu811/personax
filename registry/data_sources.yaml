@@ -16,4 +16,10 @@ data_sources:
       - financials
       - stocks
       - index_prices
+      - daily_basic
+      - income
+      - balancesheet
+      - cashflow
+      - fina_indicator
+      - adj_factor
     fallback: []

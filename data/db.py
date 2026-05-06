@@ -53,9 +53,83 @@ class Database:
         """
         return self.conn.execute(sql, [code, limit]).df()
 
+    def get_daily_basic(self, code: str, start: str | None = None, end: str | None = None) -> pd.DataFrame:
+        sql = """
+            SELECT * FROM daily_basic
+            WHERE code = ?
+            {start_filter}
+            {end_filter}
+            ORDER BY trade_date
+        """.format(
+            start_filter="AND trade_date >= ?" if start else "",
+            end_filter="AND trade_date <= ?" if end else "",
+        )
+        params = [code]
+        if start:
+            params.append(start)
+        if end:
+            params.append(end)
+        return self.conn.execute(sql, params).df()
+
+    def get_income(self, code: str, limit: int = 8) -> pd.DataFrame:
+        sql = """
+            SELECT * FROM income
+            WHERE code = ?
+            ORDER BY report_date DESC
+            LIMIT ?
+        """
+        return self.conn.execute(sql, [code, limit]).df()
+
+    def get_balancesheet(self, code: str, limit: int = 8) -> pd.DataFrame:
+        sql = """
+            SELECT * FROM balancesheet
+            WHERE code = ?
+            ORDER BY report_date DESC
+            LIMIT ?
+        """
+        return self.conn.execute(sql, [code, limit]).df()
+
+    def get_cashflow(self, code: str, limit: int = 8) -> pd.DataFrame:
+        sql = """
+            SELECT * FROM cashflow
+            WHERE code = ?
+            ORDER BY report_date DESC
+            LIMIT ?
+        """
+        return self.conn.execute(sql, [code, limit]).df()
+
+    def get_fina_indicator(self, code: str, limit: int = 8) -> pd.DataFrame:
+        sql = """
+            SELECT * FROM fina_indicator
+            WHERE code = ?
+            ORDER BY report_date DESC
+            LIMIT ?
+        """
+        return self.conn.execute(sql, [code, limit]).df()
+
+    def get_adj_factor(self, code: str, start: str | None = None, end: str | None = None) -> pd.DataFrame:
+        sql = """
+            SELECT * FROM adj_factor
+            WHERE code = ?
+            {start_filter}
+            {end_filter}
+            ORDER BY trade_date
+        """.format(
+            start_filter="AND trade_date >= ?" if start else "",
+            end_filter="AND trade_date <= ?" if end else "",
+        )
+        params = [code]
+        if start:
+            params.append(start)
+        if end:
+            params.append(end)
+        return self.conn.execute(sql, params).df()
+
     def get_last_trade_date(self, code: str, table: str = "daily_prices") -> str | None:
+        # Financial tables use report_date instead of trade_date
+        date_col = "report_date" if table in ("income", "balancesheet", "cashflow", "fina_indicator", "financials") else "trade_date"
         sql = f"""
-            SELECT MAX(trade_date) as max_date FROM {table}
+            SELECT MAX({date_col}) as max_date FROM {table}
             WHERE code = ?
         """
         result = self.conn.execute(sql, [code]).fetchone()

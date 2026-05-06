@@ -56,6 +56,140 @@ CREATE TABLE IF NOT EXISTS financials (
     PRIMARY KEY (code, report_date, report_type)
 );
 
+-- daily_basic: daily valuation metrics
+CREATE TABLE IF NOT EXISTS daily_basic (
+    code VARCHAR(20),
+    trade_date DATE,
+    close DECIMAL(12,4),
+    turnover_rate DECIMAL(8,4),
+    turnover_rate_f DECIMAL(8,4),
+    volume_ratio DECIMAL(8,4),
+    pe DECIMAL(12,4),
+    pe_ttm DECIMAL(12,4),
+    pb DECIMAL(12,4),
+    ps DECIMAL(12,4),
+    ps_ttm DECIMAL(12,4),
+    dv_ratio DECIMAL(8,4),
+    dv_ttm DECIMAL(8,4),
+    total_share DECIMAL(20,4),
+    float_share DECIMAL(20,4),
+    free_share DECIMAL(20,4),
+    total_mv DECIMAL(20,4),
+    circ_mv DECIMAL(20,4),
+    source VARCHAR(20),
+    PRIMARY KEY (code, trade_date)
+);
+
+-- income: profit statement (quarterly)
+CREATE TABLE IF NOT EXISTS income (
+    code VARCHAR(20),
+    report_date DATE,
+    report_type VARCHAR(10),
+    revenue DECIMAL(20,4),
+    operating_cost DECIMAL(20,4),
+    operating_profit DECIMAL(20,4),
+    total_profit DECIMAL(20,4),
+    net_profit DECIMAL(20,4),
+    net_profit_dedt DECIMAL(20,4),
+    basic_eps DECIMAL(12,4),
+    diluted_eps DECIMAL(12,4),
+    gross_profit DECIMAL(20,4),
+    finance_cost DECIMAL(20,4),
+    income_tax DECIMAL(20,4),
+    rd_expense DECIMAL(20,4),
+    total_compr_income DECIMAL(20,4),
+    source VARCHAR(20),
+    PRIMARY KEY (code, report_date, report_type)
+);
+
+-- balancesheet: balance sheet (quarterly)
+CREATE TABLE IF NOT EXISTS balancesheet (
+    code VARCHAR(20),
+    report_date DATE,
+    report_type VARCHAR(10),
+    total_assets DECIMAL(20,4),
+    total_liab DECIMAL(20,4),
+    total_equity DECIMAL(20,4),
+    total_cur_assets DECIMAL(20,4),
+    total_cur_liab DECIMAL(20,4),
+    money_cap DECIMAL(20,4),
+    trad_asset DECIMAL(20,4),
+    inventories DECIMAL(20,4),
+    fix_assets DECIMAL(20,4),
+    intan_assets DECIMAL(20,4),
+    goodwill DECIMAL(20,4),
+    total_nca DECIMAL(20,4),
+    total_ncl DECIMAL(20,4),
+    notes_receiv DECIMAL(20,4),
+    accounts_receiv DECIMAL(20,4),
+    source VARCHAR(20),
+    PRIMARY KEY (code, report_date, report_type)
+);
+
+-- cashflow: cash flow statement (quarterly)
+CREATE TABLE IF NOT EXISTS cashflow (
+    code VARCHAR(20),
+    report_date DATE,
+    report_type VARCHAR(10),
+    net_operate_cash_flow DECIMAL(20,4),
+    net_invest_cash_flow DECIMAL(20,4),
+    net_finance_cash_flow DECIMAL(20,4),
+    cash_equ_end_period DECIMAL(20,4),
+    sales_service_cash DECIMAL(20,4),
+    buy_service_cash DECIMAL(20,4),
+    employ_cash DECIMAL(20,4),
+    tax_pay_cash DECIMAL(20,4),
+    c_fr_sg DECIMAL(20,4),
+    c_inf_fr_operate DECIMAL(20,4),
+    c_paid_for_debt DECIMAL(20,4),
+    c_paid_to_for_empl DECIMAL(20,4),
+    source VARCHAR(20),
+    PRIMARY KEY (code, report_date, report_type)
+);
+
+-- fina_indicator: financial indicators (quarterly, core fields)
+CREATE TABLE IF NOT EXISTS fina_indicator (
+    code VARCHAR(20),
+    report_date DATE,
+    report_type VARCHAR(10),
+    eps DECIMAL(12,4),
+    dt_eps DECIMAL(12,4),
+    bps DECIMAL(12,4),
+    roe DECIMAL(8,4),
+    roe_waa DECIMAL(8,4),
+    roe_dt DECIMAL(8,4),
+    roa DECIMAL(8,4),
+    roic DECIMAL(8,4),
+    grossprofit_margin DECIMAL(8,4),
+    netprofit_margin DECIMAL(8,4),
+    debt_to_assets DECIMAL(8,4),
+    current_ratio DECIMAL(8,4),
+    quick_ratio DECIMAL(8,4),
+    ocf_to_or DECIMAL(8,4),
+    salescash_to_or DECIMAL(8,4),
+    basic_eps_yoy DECIMAL(8,4),
+    netprofit_yoy DECIMAL(8,4),
+    dt_netprofit_yoy DECIMAL(8,4),
+    tr_yoy DECIMAL(8,4),
+    or_yoy DECIMAL(8,4),
+    rd_exp DECIMAL(20,4),
+    q_netprofit_yoy DECIMAL(8,4),
+    q_roe DECIMAL(8,4),
+    q_grossprofit_margin DECIMAL(8,4),
+    q_netprofit_margin DECIMAL(8,4),
+    source VARCHAR(20),
+    PRIMARY KEY (code, report_date, report_type)
+);
+
+-- adj_factor: adjustment factor for price restoration
+CREATE TABLE IF NOT EXISTS adj_factor (
+    code VARCHAR(20),
+    trade_date DATE,
+    adj_factor DECIMAL(20,8),
+    source VARCHAR(20),
+    PRIMARY KEY (code, trade_date)
+);
+
 -- sync_log: data synchronization log
 CREATE TABLE IF NOT EXISTS sync_log (
     id INTEGER PRIMARY KEY,

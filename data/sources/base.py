@@ -24,3 +24,27 @@ class DataSource(ABC):
     def get_stocks(self) -> pd.DataFrame:
         """Return all stock basic info."""
         ...
+
+    def get_daily_basic(self, code: str, start: str, end: str) -> pd.DataFrame:
+        """Return daily valuation metrics. Optional interface."""
+        return pd.DataFrame()
+
+    def get_income(self, code: str, start: str, end: str) -> pd.DataFrame:
+        """Return income statement data. Optional interface."""
+        return pd.DataFrame()
+
+    def get_balancesheet(self, code: str, start: str, end: str) -> pd.DataFrame:
+        """Return balance sheet data. Optional interface."""
+        return pd.DataFrame()
+
+    def get_cashflow(self, code: str, start: str, end: str) -> pd.DataFrame:
+        """Return cash flow statement data. Optional interface."""
+        return pd.DataFrame()
+
+    def get_fina_indicator(self, code: str, start: str, end: str) -> pd.DataFrame:
+        """Return financial indicators. Optional interface."""
+        return pd.DataFrame()
+
+    def get_adj_factor(self, code: str, start: str, end: str) -> pd.DataFrame:
+        """Return adjustment factor for price restoration. Optional interface."""
+        return pd.DataFrame()
