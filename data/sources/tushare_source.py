@@ -56,6 +56,11 @@ class TushareSource(DataSource):
         for col in col_map.values():
             if col not in df.columns:
                 df[col] = None
+        # Convert YYYYMMDD to YYYY-MM-DD for date columns
+        if "trade_date" in df.columns:
+            df["trade_date"] = pd.to_datetime(df["trade_date"], format="%Y%m%d").dt.strftime("%Y-%m-%d")
+        if "list_date" in df.columns:
+            df["list_date"] = pd.to_datetime(df["list_date"], format="%Y%m%d", errors="coerce").dt.strftime("%Y-%m-%d")
         return df[list(col_map.values()) + ["source"]]
 
     def get_daily(self, code: str, start: str, end: str) -> pd.DataFrame:

@@ -23,7 +23,7 @@ class TongyiEmbedding:
         }
 
         all_embeddings = []
-        batch_size = 25
+        batch_size = 10
 
         for i in range(0, len(texts), batch_size):
             batch = texts[i:i + batch_size]
@@ -34,14 +34,34 @@ class TongyiEmbedding:
                 },
             }
 
-            response = requests.post(self.base_url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
+            # Retry with exponential backoff
+            max_retries = 5
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(
+                        self.base_url, headers=headers, json=payload, timeout=60
+                    )
+                    response.raise_for_status()
+                    break
+                except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as e:
+                    if attempt == max_retries - 1:
+                        raise
+                    wait = 2 ** attempt + 0.5
+                    print(f"  SSL/Connection error, retrying in {wait}s... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait)
+                except requests.exceptions.HTTPError as e:
+                    if response.status_code == 429:
+                        wait = 2 ** attempt + 1
+                        print(f"  Rate limited, retrying in {wait}s...")
+                        time.sleep(wait)
+                    else:
+                        raise
 
+            data = response.json()
             embeddings = data["output"]["embeddings"]
             all_embeddings.extend([e["embedding"] for e in embeddings])
 
-            time.sleep(0.1)  # Rate limit protection
+            time.sleep(0.15)  # Rate limit protection
 
         return all_embeddings
 

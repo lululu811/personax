@@ -8,7 +8,7 @@ knowledge_bases:
       provider: "dashscope"
       model: "text-embedding-v4"
       api_key_env: "DASHSCOPE_API_KEY"
-      batch_size: 25
+      batch_size: 10
     chunker:
       strategy: "heading"
       max_chunk_size: 1000
@@ -31,7 +31,7 @@ knowledge_bases:
       provider: "dashscope"
       model: "text-embedding-v4"
       api_key_env: "DASHSCOPE_API_KEY"
-      batch_size: 25
+      batch_size: 10
     chunker:
       strategy: "paragraph"
       max_chunk_size: 800
