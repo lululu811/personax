@@ -6,7 +6,7 @@ knowledge_bases:
     collection: "zettaranc"
     embedding:
       provider: "dashscope"
-      model: "text-embedding-v3"
+      model: "text-embedding-v4"
       api_key_env: "DASHSCOPE_API_KEY"
       batch_size: 25
     chunker:
@@ -29,7 +29,7 @@ knowledge_bases:
     collection: "common"
     embedding:
       provider: "dashscope"
-      model: "text-embedding-v3"
+      model: "text-embedding-v4"
       api_key_env: "DASHSCOPE_API_KEY"
       batch_size: 25
     chunker:

@@ -6,7 +6,7 @@ import requests
 
 
 class TongyiEmbedding:
-    def __init__(self, api_key: str | None = None, model: str = "text-embedding-v3"):
+    def __init__(self, api_key: str | None = None, model: str = "text-embedding-v4"):
         self.api_key = api_key or os.environ.get("DASHSCOPE_API_KEY")
         if not self.api_key:
             raise ValueError("DASHSCOPE_API_KEY not set")
