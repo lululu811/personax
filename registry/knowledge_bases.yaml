@@ -1,0 +1,39 @@
+knowledge_bases:
+  zettaranc:
+    name: "Z哥投资框架"
+    description: "Zettaranc直播、课程、文章整理"
+    vault_path: "/home/chenlei/001_AI/knowledge_base/zettaranc-knowledge"
+    collection: "zettaranc"
+    embedding:
+      provider: "dashscope"
+      model: "text-embedding-v3"
+      api_key_env: "DASHSCOPE_API_KEY"
+      batch_size: 25
+    chunker:
+      strategy: "heading"
+      max_chunk_size: 1000
+      preserve_hierarchy: true
+    sync:
+      trigger: "manual"
+      include_patterns:
+        - "*.md"
+      exclude_patterns:
+        - "assets/**"
+        - "templates/**"
+        - ".obsidian/**"
+
+  common:
+    name: "通用金融知识"
+    description: "通用投资术语、方法论"
+    vault_path: "/home/chenlei/001_AI/knowledge_base/common-knowledge"
+    collection: "common"
+    embedding:
+      provider: "dashscope"
+      model: "text-embedding-v3"
+      api_key_env: "DASHSCOPE_API_KEY"
+      batch_size: 25
+    chunker:
+      strategy: "paragraph"
+      max_chunk_size: 800
+    sync:
+      trigger: "manual"

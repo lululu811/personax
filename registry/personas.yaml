@@ -1,0 +1,18 @@
+personas:
+  zettaranc:
+    name: "Z哥"
+    display_name: "万千"
+    base_template: "investor_advisor"
+    description: "基于Z哥直播/课程提炼的投资思维模型"
+    knowledge_bases:
+      - zettaranc
+      - common
+    data_sources:
+      - tushare
+    features:
+      quant_enabled: true
+      multi_turn_diagnosis: true
+      web_search: false
+    quant_overrides:
+      default_indicators: ["MA", "MACD", "RSI"]
+      default_backtest_period: 252

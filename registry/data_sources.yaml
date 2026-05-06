@@ -1,0 +1,19 @@
+data_sources:
+  tushare:
+    name: "Tushare"
+    type: "api"
+    priority: 1
+    enabled: true
+    module: "data.sources.tushare_source"
+    class: "TushareSource"
+    config:
+      base_url: "http://tsy.xiaodefa.cn"
+      token_env: "TUSHARE_TOKEN"
+      rate_limit: 200
+    supported_tables:
+      - daily_prices
+      - fund_flow
+      - financials
+      - stocks
+      - index_prices
+    fallback: []
