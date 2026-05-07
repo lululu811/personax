@@ -167,5 +167,93 @@ class Database:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, [table_name, code, data_source, start_date, end_date, records_count, status, error_msg])
 
+    # ------------------ User Portfolio APIs ------------------
+
+    def get_watchlist(self, persona_name: str = "zettaranc", status: str | None = None) -> pd.DataFrame:
+        sql = "SELECT * FROM watchlist WHERE persona_name = ?"
+        params = [persona_name]
+        if status:
+            sql += " AND status = ?"
+            params.append(status)
+        sql += " ORDER BY added_at DESC"
+        return self.conn.execute(sql, params).df()
+
+    def add_watchlist(self, code: str, name: str | None = None, category: str = "default",
+                      notes: str = "", persona_name: str = "zettaranc"):
+        self.conn.execute("""
+            INSERT INTO watchlist (code, name, category, status, notes, persona_name)
+            VALUES (?, ?, ?, 'active', ?, ?)
+            ON CONFLICT (code, persona_name) DO UPDATE SET
+                name = EXCLUDED.name,
+                category = EXCLUDED.category,
+                status = 'active',
+                notes = EXCLUDED.notes
+        """, [code, name or code, category, notes, persona_name])
+
+    def remove_watchlist(self, code: str, persona_name: str = "zettaranc"):
+        self.conn.execute("""
+            UPDATE watchlist SET status = 'removed' WHERE code = ? AND persona_name = ?
+        """, [code, persona_name])
+
+    def get_holdings(self, persona_name: str = "zettaranc", status: str | None = None) -> pd.DataFrame:
+        sql = "SELECT * FROM holdings WHERE persona_name = ?"
+        params = [persona_name]
+        if status:
+            sql += " AND status = ?"
+            params.append(status)
+        sql += " ORDER BY updated_at DESC"
+        return self.conn.execute(sql, params).df()
+
+    def update_holding(self, code: str, shares: float, avg_cost: float | None = None,
+                       current_price: float | None = None, sector: str | None = None,
+                       notes: str = "", persona_name: str = "zettaranc"):
+        market_value = shares * current_price if current_price else None
+        pl_amount = market_value - shares * avg_cost if market_value and avg_cost else None
+        pl_ratio = pl_amount / (shares * avg_cost) if pl_amount and avg_cost and avg_cost != 0 else None
+        self.conn.execute("""
+            INSERT INTO holdings
+            (code, shares, avg_cost, current_price, market_value, pl_amount, pl_ratio,
+             sector, status, notes, updated_at, persona_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), ?)
+            ON CONFLICT (code, persona_name) DO UPDATE SET
+                shares = EXCLUDED.shares,
+                avg_cost = EXCLUDED.avg_cost,
+                current_price = EXCLUDED.current_price,
+                market_value = EXCLUDED.market_value,
+                pl_amount = EXCLUDED.pl_amount,
+                pl_ratio = EXCLUDED.pl_ratio,
+                sector = EXCLUDED.sector,
+                status = EXCLUDED.status,
+                notes = EXCLUDED.notes,
+                updated_at = now()
+        """, [code, shares, avg_cost, current_price, market_value, pl_amount, pl_ratio,
+              sector, 'holding' if shares > 0 else 'closed', notes, persona_name])
+
+    def get_trades(self, code: str | None = None, persona_name: str = "zettaranc",
+                   start_date: str | None = None, end_date: str | None = None) -> pd.DataFrame:
+        sql = "SELECT * FROM trades WHERE persona_name = ?"
+        params = [persona_name]
+        if code:
+            sql += " AND code = ?"
+            params.append(code)
+        if start_date:
+            sql += " AND trade_date >= ?"
+            params.append(start_date)
+        if end_date:
+            sql += " AND trade_date <= ?"
+            params.append(end_date)
+        sql += " ORDER BY trade_date DESC, rowid DESC"
+        return self.conn.execute(sql, params).df()
+
+    def add_trade(self, trade_date: str, code: str, trade_type: str, shares: float,
+                  price: float, fee: float = 0, tax: float = 0, name: str | None = None,
+                  notes: str = "", persona_name: str = "zettaranc"):
+        amount = shares * price
+        total_cost = amount + fee + tax
+        self.conn.execute("""
+            INSERT INTO trades (trade_date, code, name, trade_type, shares, price, amount, fee, tax, total_cost, status, notes, persona_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)
+        """, [trade_date, code, name or code, trade_type, shares, price, amount, fee, tax, total_cost, notes, persona_name])
+
     def close(self):
         self.conn.close()

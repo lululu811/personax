@@ -190,6 +190,55 @@ CREATE TABLE IF NOT EXISTS adj_factor (
     PRIMARY KEY (code, trade_date)
 );
 
+-- watchlist: user's watchlist stocks
+CREATE TABLE IF NOT EXISTS watchlist (
+    code VARCHAR(20) NOT NULL,
+    name VARCHAR(100),
+    added_at TIMESTAMP DEFAULT now(),
+    category VARCHAR(50) DEFAULT 'default',
+    status VARCHAR(20) DEFAULT 'active',
+    notes TEXT,
+    persona_name VARCHAR(50) DEFAULT 'zettaranc',
+    PRIMARY KEY (code, persona_name)
+);
+
+-- holdings: user's current holdings
+CREATE TABLE IF NOT EXISTS holdings (
+    code VARCHAR(20) NOT NULL,
+    name VARCHAR(100),
+    shares DECIMAL(20,4) DEFAULT 0,
+    avg_cost DECIMAL(12,4),
+    current_price DECIMAL(12,4),
+    market_value DECIMAL(20,4),
+    pl_amount DECIMAL(20,4),
+    pl_ratio DECIMAL(8,4),
+    weight DECIMAL(8,4),
+    sector VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'holding',
+    notes TEXT,
+    updated_at TIMESTAMP DEFAULT now(),
+    persona_name VARCHAR(50) DEFAULT 'zettaranc',
+    PRIMARY KEY (code, persona_name)
+);
+
+-- trades: user's trade records (delivery orders)
+CREATE TABLE IF NOT EXISTS trades (
+    trade_date DATE NOT NULL,
+    code VARCHAR(20) NOT NULL,
+    name VARCHAR(100),
+    trade_type VARCHAR(10) NOT NULL,
+    shares DECIMAL(20,4) NOT NULL,
+    price DECIMAL(12,4) NOT NULL,
+    amount DECIMAL(20,4),
+    fee DECIMAL(12,4) DEFAULT 0,
+    tax DECIMAL(12,4) DEFAULT 0,
+    total_cost DECIMAL(20,4),
+    status VARCHAR(20) DEFAULT 'confirmed',
+    notes TEXT,
+    persona_name VARCHAR(50) DEFAULT 'zettaranc',
+    created_at TIMESTAMP DEFAULT now()
+);
+
 -- sync_log: data synchronization log
 CREATE TABLE IF NOT EXISTS sync_log (
     id INTEGER PRIMARY KEY,
