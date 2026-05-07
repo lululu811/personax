@@ -10,7 +10,7 @@ Indicators derived from Z哥's trading system:
 - Violent K detection (暴力K)
 - Breathing structure (呼吸结构)
 - B2 breakthrough
-- Five-point scoring
+- Five-point scoring (少妇战法V1.3)
 - SB1 fake-fall
 - S1 top warning
 - Half-position release
@@ -22,5 +22,10 @@ Indicators derived from Z哥's trading system:
 - Pit target (坑口战法 - 黄金坑识别与目标价)
 - Three waves (三波理论 - 建仓/拉升/冲刺波)
 - Two-thirty rule (两个30%原则)
+- Double ponytail (双马尾战法)
+- Three outside three (三外有三战法)
+- Top windmill (顶部大风车)
+- Three-quarters volume (四分之三阴量线 / 假突破识别)
+- Fake bearish (假阴真阳 - 主力洗盘信号)
 """
 from quant.indicators.zettaranc import composite

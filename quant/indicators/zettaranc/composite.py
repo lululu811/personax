@@ -717,3 +717,271 @@ def validate_two_thirty_rule(
 
     # Combined: both conditions must be satisfied
     return gain_ok & turnover_ok
+
+
+@register_indicator("ZX_DOUBLE_PONYTAIL", category="composite")
+def detect_double_ponytail(
+    df: pd.DataFrame,
+    shadow_ratio: float = 2.0,
+    volume_mult: float = 1.5,
+    max_distance: int = 5,
+    min_decline_pct: float = 15.0,
+) -> pd.Series:
+    """Double ponytail strategy (双马尾战法).
+
+    From Z哥's knowledge base:
+    Two candles with long upper shadows + significant volume, close together.
+    This is a sign of main force shaking out weak hands (震仓做盘痕迹).
+
+    Key characteristics:
+    1. Two candles with long upper shadows (upper_shadow / body >= shadow_ratio)
+    2. Both candles have above-average volume (>= volume_mult x avg)
+    3. The two candles are close together (within max_distance days)
+    4. Appears in a bottom area (declined from recent high)
+
+    Trading rule:
+    - When price returns to the area between the two ponytail candles,
+      especially near the lower part, and B1 appears -> buy signal
+    - Don't linger: if it doesn't rise, exit immediately (箭在弦上不得不发)
+    """
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    open_ = df["open"]
+    volume = df["vol"]
+
+    # Calculate body and upper shadow
+    body = abs(close - open_)
+    upper_shadow = high - close.where(close >= open_, open_)
+
+    # Long upper shadow: upper_shadow >= shadow_ratio * body
+    long_shadow = upper_shadow >= body * shadow_ratio
+
+    # Above-average volume
+    avg_volume = volume.rolling(window=20).mean()
+    high_volume = volume >= avg_volume * volume_mult
+
+    # Ponytail candle = long shadow + high volume
+    ponytail = long_shadow & high_volume
+
+    # Need two ponytails close together
+    # Find days with ponytail and check if another exists within max_distance
+    ponytail_indices = ponytail[ponytail].index
+    has_pair = pd.Series(False, index=df.index)
+
+    for idx in ponytail_indices:
+        idx_pos = df.index.get_loc(idx)
+        # Look for another ponytail within max_distance days
+        for offset in range(1, max_distance + 1):
+            if idx_pos - offset >= 0:
+                other_idx = df.index[idx_pos - offset]
+                if ponytail.loc[other_idx]:
+                    has_pair.loc[idx] = True
+                    break
+            if idx_pos + offset < len(df):
+                other_idx = df.index[idx_pos + offset]
+                if ponytail.loc[other_idx]:
+                    has_pair.loc[idx] = True
+                    break
+
+    # Bottom area: declined from recent high
+    recent_high = high.rolling(window=40).max()
+    decline_from_high = (recent_high - close) / recent_high * 100
+    at_bottom = decline_from_high >= min_decline_pct
+
+    return has_pair & at_bottom
+
+
+@register_indicator("ZX_THREE_OUTSIDE_THREE", category="composite")
+def detect_three_outside_three(
+    df: pd.DataFrame,
+    min_gain_pct: float = 9.0,
+    pullback_lookback: int = 10,
+) -> pd.Series:
+    """Three-outside-three strategy (三外有三战法).
+
+    From Z哥's knowledge base:
+    If a stock falls significantly, then three consecutive limit-up boards
+    fill the gap (填坑), then pulls back to B1 -> opportunity to enter.
+    Short-term manipulators (短庄) like this pattern.
+
+    Key characteristics:
+    1. Prior significant decline (at least 20% from recent high)
+    2. Three consecutive big gain days (each >= min_gain_pct)
+    3. Pullback after the three-day surge
+    4. KDJ J < 13 at pullback (B1 signal)
+
+    Variations:
+    - "7 outside 11": 7 consecutive limit-ups, pullback to B1 -> 11 more
+    - This is tail-end fishing (鱼尾), eat if you can, skip if you can't
+    """
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    volume = df["vol"]
+
+    # Daily gain percentage
+    gain_pct = (close - close.shift(1)) / close.shift(1) * 100
+
+    # Three consecutive big gain days
+    three_up = (
+        (gain_pct >= min_gain_pct)
+        & (gain_pct.shift(1) >= min_gain_pct)
+        & (gain_pct.shift(2) >= min_gain_pct)
+    )
+
+    # Prior decline: at least 20% from recent high before the surge
+    recent_high_before = high.rolling(window=30).max().shift(3)
+    decline_before = (recent_high_before - close.shift(3)) / recent_high_before * 100
+    had_decline = decline_before >= 20
+
+    # Check for pullback after the three-day surge (within pullback_lookback days)
+    pullback_zone = three_up.rolling(window=pullback_lookback).max().shift(-pullback_lookback).fillna(0).astype(bool)
+
+    # B1 signal at current position (J < 13)
+    lowest_low = low.rolling(window=9).min()
+    highest_high = high.rolling(window=9).max()
+    rsv = (close - lowest_low) / (highest_high - lowest_low) * 100
+    rsv = rsv.fillna(0)
+    k = rsv.rolling(window=3).mean()
+    d = k.rolling(window=3).mean()
+    j = 3 * k - 2 * d
+    b1_signal = j < 13
+
+    # Signal: had three-up pattern recently AND currently at B1
+    return pullback_zone & b1_signal & had_decline
+
+
+@register_indicator("ZX_TOP_WINDMILL", category="composite")
+def detect_top_windmill(
+    df: pd.DataFrame,
+    volume_mult: float = 2.5,
+    shadow_min_pct: float = 2.0,
+    lookback: int = 20,
+) -> pd.Series:
+    """Top windmill (顶部大风车) - top reversal warning signal.
+
+    From Z哥's knowledge base:
+    "凡是看到这种放量的风车，就减仓一半！这叫摸顶！"
+
+    Key characteristics:
+    1. True bearish candle (close < open) - 真阴线
+    2. Huge volume (>= volume_mult x recent average)
+    3. Long upper AND lower shadows (both >= shadow_min_pct of body)
+    4. Appears at relative high (near recent highs)
+
+    This is a strong warning signal. When seen, reduce position by half.
+    After this signal, expect at least 40% pullback before considering B1.
+    """
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    open_ = df["open"]
+    volume = df["vol"]
+
+    # True bearish candle
+    bearish = close < open_
+
+    # Huge volume
+    avg_volume = volume.rolling(window=lookback).mean()
+    huge_volume = volume >= avg_volume * volume_mult
+
+    # Long shadows
+    body = abs(close - open_)
+    upper_shadow = high - open_  # For bearish candle, open is higher
+    lower_shadow = close - low   # For bearish candle, close is lower
+
+    # Minimum shadow as percentage of body
+    long_upper = (upper_shadow / body) >= shadow_min_pct
+    long_lower = (lower_shadow / body) >= shadow_min_pct
+    long_shadows = long_upper & long_lower
+
+    # At relative high (within top 15% of recent range)
+    recent_high = high.rolling(window=lookback).max()
+    near_high = close >= recent_high * 0.85
+
+    return bearish & huge_volume & long_shadows & near_high
+
+
+@register_indicator("ZX_THREE_QUARTERS_VOLUME", category="composite")
+def detect_three_quarters_volume(
+    df: pd.DataFrame,
+    breakout_gain_pct: float = 4.0,
+    volume_ratio: float = 0.75,
+) -> pd.Series:
+    """Three-quarters bearish volume line (四分之三阴量线/3/4阴量线).
+
+    From Z哥's knowledge base:
+    After a breakout big bullish candle, check the next day's bearish candle:
+    If the bearish volume >= 75% of the breakout day's volume -> fake breakout!
+
+    Key principle:
+    - Breakout + small follow-up (缩半量 small bullish/shrinking volume) = good, hold
+    - Breakout + big bearish with volume >= 75% of breakout = danger, not add position
+
+    Conditions:
+    1. Yesterday was a breakout big gain day (gain >= breakout_gain_pct)
+    2. Today is a bearish candle (close < open)
+    3. Today's volume >= 75% of yesterday's volume
+    4. This signals potential distribution/fake breakout
+
+    Trading rule:
+    - If this pattern appears after breakout -> don't add position
+    - If already holding -> consider reducing position
+    """
+    close = df["close"]
+    open_ = df["open"]
+    volume = df["vol"]
+
+    # Yesterday was big gain day
+    prev_gain = (close.shift(1) - close.shift(2)) / close.shift(2) * 100
+    was_breakout = prev_gain >= breakout_gain_pct
+
+    # Today is bearish
+    today_bearish = close < open_
+
+    # Today's volume >= 75% of yesterday's
+    vol_condition = volume >= volume.shift(1) * volume_ratio
+
+    return was_breakout & today_bearish & vol_condition
+
+
+@register_indicator("ZX_FAKE_BEARISH", category="composite")
+def detect_fake_bearish(
+    df: pd.DataFrame,
+    min_gain_pct: float = 0.0,
+) -> pd.Series:
+    """Fake bearish (假阴真阳) - bullish continuation signal disguised as bearish.
+
+    From Z哥's knowledge base:
+    "假阴真阳是指K线在图表上显示为阴线（收盘价低于开盘价），
+     但实际上股价较前一日上涨（收盘价高于前一日收盘价）。"
+
+    Key characteristics:
+    1. Bearish appearance: close < open (阴线外观)
+    2. Actual rise: close > prev_close (实际股价上涨)
+    3. Often appears after limit-up boards (出现在涨停后)
+    4. Main force absorbs all selling pressure at prices above previous close
+    5. May be heavy volume (主力对倒洗盘) or low volume (筹码锁定良好)
+
+    This is NOT a top windmill! Price is still rising.
+    The main force has eaten all the supply and will continue up.
+
+    Key distinction from 假阳真阴:
+    - 假阴真阳: close < open BUT close > prev_close (bullish, hold)
+    - 假阳真阴: close > open BUT close < prev_close (bearish, distribution)
+    """
+    close = df["close"]
+    open_ = df["open"]
+
+    # Bearish appearance
+    bearish_look = close < open_
+
+    # Actual rise compared to previous close
+    actual_rise = close > close.shift(1)
+
+    # Minimum gain threshold (optional, default 0% = any rise)
+    gain_vs_prev = (close - close.shift(1)) / close.shift(1) * 100
+    min_rise = gain_vs_prev >= min_gain_pct
+
+    return bearish_look & actual_rise & min_rise
