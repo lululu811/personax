@@ -55,3 +55,5 @@ htmlcov/
 # ChromaDB in-memory artifacts
 :memory/
 :memory/
+knowledge/.sync_state.json
+:memory:/
