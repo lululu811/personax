@@ -4,6 +4,7 @@ Indicators derived from Z哥's trading system:
 - Double-line system (white/yellow lines, golden/dead cross)
 - BBI (Bull and Bear Index)
 - KDJ with B1 signal detection
+- RSI(3) with 20/80 boundaries
 - Brick chart (砖型图)
 - Single-needle code (单针代码)
 - Single-needle below 20 (单针下20 / 补票战法)
@@ -27,5 +28,8 @@ Indicators derived from Z哥's trading system:
 - Top windmill (顶部大风车)
 - Three-quarters volume (四分之三阴量线 / 假突破识别)
 - Fake bearish (假阴真阳 - 主力洗盘信号)
+- Double gun (双枪战法 - 两根放量阳柱夹缩量阴线)
+- Buy exhaustion (买盘枯竭 - 上涨动能衰竭)
+- Long shadow short volume (长阴短柱 - 主力洗盘未出货)
 """
 from quant.indicators.zettaranc import composite

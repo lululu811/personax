@@ -985,3 +985,170 @@ def detect_fake_bearish(
     min_rise = gain_vs_prev >= min_gain_pct
 
     return bearish_look & actual_rise & min_rise
+
+
+@register_indicator("ZX_DOUBLE_GUN", category="composite")
+def detect_double_gun(
+    df: pd.DataFrame,
+    volume_mult: float = 1.5,
+    max_middle_days: int = 5,
+    min_gain_pct: float = 3.0,
+) -> pd.Series:
+    """Double gun strategy (双枪战法).
+
+    From Z哥's knowledge base:
+    Two high-volume bullish candles sandwiching a cluster of shrinking-volume
+    small bearish candles. When the second bullish candle appears = buy signal.
+
+    Key characteristics:
+    1. First gun: bullish candle with volume >= volume_mult x avg
+    2. Middle: several small bearish candles with shrinking volume
+    3. Second gun: bullish candle with volume >= volume_mult x avg
+    4. Second gun appears after B1 or as B2 confirmation
+
+    Trading rule:
+    - When second gun appears, enter next day open
+    - Stop loss at white line (BBI)
+    - If market crashes, allow false breakdown but expect quick recovery
+    """
+    close = df["close"]
+    open_ = df["open"]
+    volume = df["vol"]
+
+    avg_volume = volume.rolling(window=20).mean()
+
+    # Bullish candle
+    bullish = close > open_
+
+    # High volume condition
+    high_volume = volume >= avg_volume * volume_mult
+
+    # Gain condition
+    gain_pct = (close - open_) / open_ * 100
+    big_gain = gain_pct >= min_gain_pct
+
+    # First gun: bullish + high volume + big gain
+    first_gun = bullish & high_volume & big_gain
+
+    # Look for second gun pattern
+    signal = pd.Series(False, index=df.index)
+
+    for i in range(max_middle_days + 2, len(df)):
+        idx = df.index[i]
+
+        # Check if today is a potential second gun
+        if not (bullish.iloc[i] and high_volume.iloc[i] and big_gain.iloc[i]):
+            continue
+
+        # Look back for first gun within max_middle_days+1 days
+        found_first_gun = False
+        for j in range(1, max_middle_days + 2):
+            back_idx = i - j
+            if back_idx < 0:
+                break
+
+            if first_gun.iloc[back_idx]:
+                # Check middle candles between first and second gun
+                middle_start = back_idx + 1
+                middle_end = i
+
+                if middle_end <= middle_start:
+                    found_first_gun = True
+                    break
+
+                # Middle candles should be mostly bearish or small with shrinking volume
+                middle_volume = volume.iloc[middle_start:middle_end]
+                middle_avg_vol = middle_volume.mean()
+
+                # Middle volume should be lower than both guns
+                if middle_avg_vol < volume.iloc[back_idx] * 0.8:
+                    found_first_gun = True
+                    break
+
+        if found_first_gun:
+            signal.iloc[i] = True
+
+    return signal
+
+
+@register_indicator("ZX_BUY_EXHAUSTION", category="composite")
+def detect_buy_exhaustion(
+    df: pd.DataFrame,
+    volume_shrink_pct: float = 0.5,
+    lookback: int = 10,
+    min_rise_pct: float = 20.0,
+) -> pd.Series:
+    """Buy exhaustion signal (买盘枯竭) - top warning.
+
+    From Z哥's knowledge base:
+    In an uptrend, when small bullish candles appear with obviously shrinking
+    volume, it indicates insufficient upward momentum.
+
+    Key characteristics:
+    1. Stock has risen significantly (cumulative gain >= min_rise_pct)
+    2. Recent candles are small bullish (gain < 2%)
+    3. Volume shrinks to <= volume_shrink_pct of recent average
+    4. This signals buying power is drying up
+
+    Trading rule:
+    - When buy exhaustion appears after acceleration, consider reducing position
+    - "适当放飞~不要贪心~"
+    - Often followed by pullback or consolidation
+    """
+    close = df["close"]
+    open_ = df["open"]
+    volume = df["vol"]
+
+    # Significant prior rise
+    start_price = close.shift(lookback)
+    cumulative_gain = (close - start_price) / start_price * 100
+    has_risen = cumulative_gain >= min_rise_pct
+
+    # Small bullish candle (gain < 2%)
+    gain_pct = (close - open_) / open_ * 100
+    small_bullish = (close > open_) & (gain_pct < 2.0)
+
+    # Shrinking volume
+    avg_volume = volume.rolling(window=lookback).mean()
+    volume_shrink = volume <= avg_volume * volume_shrink_pct
+
+    return has_risen & small_bullish & volume_shrink
+
+
+@register_indicator("ZX_LONG_SHADOW_SHORT_VOL", category="composite")
+def detect_long_shadow_short_volume(
+    df: pd.DataFrame,
+    body_pct_threshold: float = 2.0,
+    volume_ratio: float = 0.8,
+) -> pd.Series:
+    """Long bearish shadow with short volume (长阴短柱) - washout signal.
+
+    From Z哥's knowledge base:
+    "每个下跌的位置都是长阴短柱" - the main force is washing out weak hands
+    without actually distributing. Long bearish candle but volume is small.
+
+    Key characteristics:
+    1. Bearish candle with significant body (decline >= body_pct_threshold%)
+    2. Volume is small relative to recent average (<= volume_ratio)
+    3. Indicates main force is NOT selling, just shaking out weak hands
+    4. Often appears at support levels in an uptrend
+
+    Trading rule:
+    - Long shadow short volume at support = bullish signal
+    - The main force is creating panic to collect cheap shares
+    - If followed by stabilization and B1 = high-probability entry
+    """
+    close = df["close"]
+    open_ = df["open"]
+    volume = df["vol"]
+
+    # Bearish candle with significant decline
+    bearish = close < open_
+    decline_pct = (open_ - close) / open_ * 100
+    significant_decline = decline_pct >= body_pct_threshold
+
+    # Volume is small relative to recent average
+    avg_volume = volume.rolling(window=20).mean()
+    low_volume = volume <= avg_volume * volume_ratio
+
+    return bearish & significant_decline & low_volume

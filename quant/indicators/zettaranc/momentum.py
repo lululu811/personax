@@ -101,3 +101,55 @@ def calculate_single_needle(df: pd.DataFrame, n1: int = 5, n2: int = 60) -> dict
         "white_cross_red": white_cross_red,
         "white_cross_yellow": white_cross_yellow,
     }
+
+
+@register_indicator("ZX_RSI_3", category="momentum")
+def calculate_rsi_3(df: pd.DataFrame, period: int = 3) -> dict:
+    """RSI with period 3 (Zettaranc specific settings).
+
+    From Z哥's knowledge base:
+    "RSI，参数都设置成3以后，那20和80为边界，
+     跌下20以下是近期低点，也是买点，涨到80以上就是近期的高点。"
+
+    Standard RSI formula:
+        RS = SMA(UP, N) / SMA(DOWN, N)
+        RSI = 100 - 100 / (1 + RS)
+
+    Zettaranc-specific interpretation:
+    - RSI < 20: recent low, potential buy point (B1 zone)
+    - RSI > 80: recent high, potential sell/take-profit zone
+    - Period = 3 for maximum sensitivity (short-term swings)
+
+    Args:
+        df: DataFrame with close column
+        period: RSI period (default 3 per Z哥's setting)
+
+    Returns:
+        dict with RSI values and signals
+    """
+    close = df["close"]
+
+    # Price changes
+    delta = close.diff()
+
+    # Separate gains and losses
+    gain = delta.where(delta > 0, 0)
+    loss = (-delta).where(delta < 0, 0)
+
+    # Average gain and loss using SMA
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean()
+
+    # RS and RSI
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+
+    # Zettaranc signals
+    oversold = rsi < 20      # Below 20 = recent low, buy zone
+    overbought = rsi > 80    # Above 80 = recent high, sell zone
+
+    return {
+        "rsi": rsi,
+        "oversold": oversold,
+        "overbought": overbought,
+    }
