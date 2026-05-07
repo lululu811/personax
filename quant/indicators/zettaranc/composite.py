@@ -470,3 +470,250 @@ def detect_abnormal_movement(
     abnormal = volume_surge & price_rises & near_ma60 & ma60_flat_or_up
 
     return abnormal
+
+
+@register_indicator("ZX_SINGLE_NEEDLE_20", category="composite")
+def detect_single_needle_20(df: pd.DataFrame, n1: int = 5, n2: int = 60) -> pd.Series:
+    """Single-needle below 20 (单针下20 / 补票战法核心信号).
+
+    From Z哥's knowledge base - exact formula from 补票战法:
+        短期 = 100*(CLOSE - LLV(LOW, N1))/(HHV(CLOSE, N1) - LLV(LOW, N1))
+        长期 = 100*(CLOSE - LLV(LOW, N2))/(HHV(CLOSE, N2) - LLV(LOW, N2))
+
+    Buy condition (补票信号):
+        1. 长期 >= 80 for 5 consecutive days (长线5日内大于80)
+        2. 长期 >= 99.99 today (长线今天等于100)
+        3. 短期 >= 99.99 today (白线今天等于100)
+        4. 短期 <= 20 yesterday (白线昨天小于等于20)
+
+    This is the "deep V" reversal pattern - white line quickly V-bounces
+    from below 20 to 100, while red line stays elevated (>80).
+    """
+    close = df["close"]
+    low = df["low"]
+
+    # Short-term (white) stochastic
+    ll_n1 = low.rolling(window=n1).min()
+    hh_n1 = close.rolling(window=n1).max()
+    short_term = (close - ll_n1) / (hh_n1 - ll_n1) * 100
+
+    # Long-term (red) stochastic
+    ll_n2 = low.rolling(window=n2).min()
+    hh_n2 = close.rolling(window=n2).max()
+    long_term = (close - ll_n2) / (hh_n2 - ll_n2) * 100
+
+    # Condition 1: Long-term >= 80 for 5 consecutive days
+    long_above_80 = long_term >= 80
+    long_5days = long_above_80.rolling(window=5).min().fillna(0).astype(bool)
+
+    # Condition 2: Long-term >= 99.99 today
+    long_near_100 = long_term >= 99.99
+
+    # Condition 3: Short-term >= 99.99 today
+    short_near_100 = short_term >= 99.99
+
+    # Condition 4: Short-term <= 20 yesterday
+    short_below_20_yesterday = short_term.shift(1) <= 20
+
+    # Combined signal
+    signal = long_5days & long_near_100 & short_near_100 & short_below_20_yesterday
+
+    return signal
+
+
+@register_indicator("ZX_PIT_TARGET", category="composite")
+def calculate_pit_target(df: pd.DataFrame, lookback: int = 60) -> dict:
+    """Pit strategy (坑口战法) - detect golden pit and calculate target price.
+
+    From Z哥: "坑向上计算目标价位的公式 = 颈线 * 2 - 坑底"
+    Or equivalently: Target = Neckline + (Neckline - PitBottom)
+
+    Golden pit characteristics:
+    1. Price falls significantly from a neckline level (at least 20% decline)
+    2. Forms a bottom and stabilizes (consolidation at pit bottom)
+    3. Volume dries up at the bottom (缩量企稳)
+    4. When price breaks above neckline, target is calculated
+
+    Returns dict with pit detection signals and target prices.
+    """
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    volume = df["vol"]
+
+    # Find neckline (recent significant high before decline)
+    recent_high = high.rolling(window=lookback).max()
+    recent_low = low.rolling(window=lookback).min()
+
+    # Decline from high (at least 20% to be considered a pit)
+    decline_pct = (recent_high - close) / recent_high * 100
+    in_pit = decline_pct >= 20
+
+    # Volume dries up at bottom (volume < 50% of recent average)
+    avg_volume = volume.rolling(window=20).mean()
+    volume_dry = volume < avg_volume * 0.5
+
+    # Pit bottom stabilization: price near recent low + volume dry
+    near_bottom = (close <= recent_low * 1.05) & (close >= recent_low * 0.98)
+    stabilization = near_bottom & volume_dry
+
+    # Breakout above neckline
+    above_neckline = close > recent_high.shift(5) * 0.98  # Allow small tolerance
+
+    # Calculate target price: Target = Neckline * 2 - PitBottom
+    # Use the lowest point in the pit as pit_bottom
+    pit_bottom = recent_low
+    neckline = recent_high.shift(lookback // 2)  # High before the pit
+    target_price = neckline * 2 - pit_bottom
+
+    # Current progress toward target
+    progress_pct = (close - pit_bottom) / (target_price - pit_bottom) * 100
+    progress_pct = progress_pct.where(target_price > pit_bottom, 0)
+
+    # Pit signal: in pit area + stabilization detected
+    pit_signal = in_pit & stabilization
+
+    return {
+        "in_pit": in_pit,
+        "stabilization": stabilization,
+        "pit_signal": pit_signal,
+        "above_neckline": above_neckline,
+        "neckline": neckline,
+        "pit_bottom": pit_bottom,
+        "target_price": target_price,
+        "progress_pct": progress_pct,
+    }
+
+
+@register_indicator("ZX_THREE_WAVES", category="composite")
+def detect_three_waves(df: pd.DataFrame, lookback: int = 60) -> dict:
+    """Three-wave theory (三波理论) detector.
+
+    From Z哥's knowledge base:
+    1. 建仓波 (Build Wave): Bottom rises with continuous volume,
+       cumulative gain 25-50%, no limit-up boards preferred
+    2. 拉升波 (Pull Wave): Quickly脱离建仓成本区,
+       first B1 after pull wave should be avoided
+    3. 冲刺波 (Sprint Wave): Final large-scale rise,
+       do not touch after sprint wave
+
+    Key filtering rules:
+    - First B1 after pull wave: avoid (risky)
+    - After sprint wave: do not enter
+    - One-wave flow (一波流): no clear build/pull structure, avoid
+
+    Returns dict with wave phase classification and trading signals.
+    """
+    close = df["close"]
+    volume = df["vol"]
+
+    # Calculate cumulative gain in lookback window
+    start_price = close.shift(lookback)
+    cumulative_gain = (close - start_price) / start_price * 100
+
+    # Calculate average volume vs current volume
+    avg_volume = volume.rolling(window=20).mean()
+    volume_ratio = volume / avg_volume
+
+    # Build wave detection: bottom area + significant volume + moderate gain
+    # Price near recent lows but starting to rise
+    recent_low = close.rolling(window=lookback).min()
+    near_bottom = close <= recent_low * 1.15  # Within 15% of bottom
+
+    # Significant volume during build phase (avg volume > 1.5x)
+    high_volume_period = avg_volume > volume.shift(20).rolling(window=20).mean() * 1.5
+
+    # Build wave: near bottom + cumulative gain 15-50% + volume confirmation
+    build_wave = near_bottom & (cumulative_gain >= 15) & (cumulative_gain <= 50) & high_volume_period
+
+    # Pull wave: after build, rapid rise (>20% in short time), not near bottom anymore
+    short_gain = (close - close.shift(10)) / close.shift(10) * 100
+    rapid_rise = short_gain >= 20
+    pull_wave = (~near_bottom) & rapid_rise & (cumulative_gain >= 20) & (cumulative_gain < 50)
+
+    # Sprint wave: after significant rise, parabolic move
+    sprint_wave = (cumulative_gain >= 50) & (short_gain >= 15)
+
+    # One-wave flow detection: no clear volume structure, straight rise
+    # Characterized by: low volume during rise, no consolidation
+    one_wave = (cumulative_gain >= 30) & (~high_volume_period) & (volume_ratio < 1.2)
+
+    # Phase classification
+    phase = pd.Series("unknown", index=df.index)
+    phase[build_wave] = "build"
+    phase[pull_wave & ~sprint_wave] = "pull"
+    phase[sprint_wave] = "sprint"
+    phase[one_wave] = "one_wave"
+
+    # Trading signals
+    # Avoid first B1 after pull wave
+    after_pull = phase.shift(1) == "pull"
+    avoid_b1 = after_pull & (phase == "pull")
+
+    # Do not enter after sprint wave
+    after_sprint = phase.shift(1) == "sprint"
+    no_enter = after_sprint
+
+    return {
+        "phase": phase,
+        "build_wave": build_wave,
+        "pull_wave": pull_wave,
+        "sprint_wave": sprint_wave,
+        "one_wave": one_wave,
+        "avoid_b1": avoid_b1,
+        "no_enter": no_enter,
+    }
+
+
+@register_indicator("ZX_TWO_THIRTY", category="composite")
+def validate_two_thirty_rule(
+    df: pd.DataFrame,
+    max_gain_pct: float = 30.0,
+    max_turnover_pct: float = 30.0,
+    lookback: int = 20,
+) -> pd.Series:
+    """Two-30% rule validator (两个30%原则).
+
+    From Z哥's knowledge base (TANGOO article):
+    "相对安全的区间是：前期放量的三根中大阳线，累计换手率不超过30%，
+     且建仓期间绝对涨幅不超过30%"
+
+    This rule filters out stocks that have risen too much or turned over
+    too much during the accumulation phase, which indicates potential
+    distribution rather than accumulation.
+
+    Args:
+        max_gain_pct: Maximum allowed cumulative gain (default 30%)
+        max_turnover_pct: Maximum allowed cumulative turnover (default 30%)
+        lookback: Window to check for the rule
+
+    Returns:
+        Boolean series: True if stock passes the two-30% rule
+    """
+    close = df["close"]
+    volume = df["vol"]
+
+    # Calculate cumulative gain in lookback window
+    start_price = close.shift(lookback)
+    cumulative_gain = (close - start_price) / start_price * 100
+
+    # Calculate cumulative turnover (need total shares for true turnover)
+    # Using volume ratio as proxy if true turnover data not available
+    # Cumulative volume / average daily volume
+    cumulative_volume = volume.rolling(window=lookback).sum()
+    avg_daily_volume = volume.rolling(window=lookback).mean()
+    turnover_proxy = cumulative_volume / avg_daily_volume
+
+    # Normalize turnover_proxy to approximate percentage
+    # Assuming avg daily volume represents ~1-2% of float
+    # So cumulative_volume / float ≈ turnover_pct
+    # Using a heuristic: if volume data shows 3 big volume days with 10% each = 30%
+    # This is a simplified proxy - true implementation needs float data
+    cumulative_turnover_pct = turnover_proxy * 1.5  # Rough heuristic
+
+    # Check if both conditions are met
+    gain_ok = cumulative_gain <= max_gain_pct
+    turnover_ok = cumulative_turnover_pct <= max_turnover_pct
+
+    # Combined: both conditions must be satisfied
+    return gain_ok & turnover_ok
