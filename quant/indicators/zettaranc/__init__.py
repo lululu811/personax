@@ -14,5 +14,9 @@ Indicators derived from Z哥's trading system:
 - S1 top warning
 - Half-position release
 - Ultimate B1 screener
+- Super B1 (超级B1 - advanced shakeout signal)
+- N-structure detection (N型结构)
+- Twist (扭一扭 - MA bullish alignment)
+- Abnormal movement (异动检测)
 """
 from quant.indicators.zettaranc import composite
