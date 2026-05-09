@@ -1,5 +1,6 @@
 """Orchestration Engine - Main engine tying routing, caching, and aggregation."""
 
+import re
 from dataclasses import dataclass, field
 from typing import Optional, Any
 import pandas as pd
@@ -15,6 +16,10 @@ from orchestration.signal_aggregator import (
 from orchestration.response_generator import ResponseGenerator, GenerationContext
 from orchestration.conversation import ConversationManager, ConversationState, DiagnosisEngine
 from personas.persona_loader import load_persona
+from tools.quant.technical import QUERY_TOOLS as _DEFAULT_QUERY_TOOLS
+from tools.quant.technical.interface import get_tool as _get_tool
+from tools.quant.technical.interface import list_tools as _list_tools
+from tools.financial_reports import FinancialReportTool
 
 
 @dataclass
@@ -45,46 +50,6 @@ class OrchestrationResponse:
     diagnosis_route: Optional[str] = None  # A/B/C/D route letter
 
 
-# Query -> Tool mapping
-QUERY_TOOLS = {
-    "kdj": ["kdj"],
-    "rsi": ["rsi_3"],
-    "bbi": ["bbi"],
-    "macd": ["macd"],
-    "布林": ["bollinger"],
-    "atr": ["atr"],
-    "随机": ["stochastic"],
-}
-
-# Query -> Strategy mapping
-QUERY_STRATEGIES = {
-    "B1": ["b1"],
-    "b1": ["b1"],
-    "B2": ["b2_break"],
-    "b2": ["b2_break"],
-    "五分": ["five_score"],
-    "五点": ["five_score"],
-    "sb1": ["sb1"],
-    "S1": ["s1_warning"],
-    "s1": ["s1_warning"],
-    "半仓": ["half_release"],
-    "终极B1": ["ultimate_b1"],
-    "超级B1": ["super_b1"],
-    "单针": ["single_needle_20"],
-    "补票": ["single_needle_20"],
-    "异动": ["abnormal"],
-    "坑口": ["pit_target"],
-    "三波": ["three_waves"],
-    "两个30": ["two_thirty"],
-    "双马尾": ["double_ponytail"],
-    "三外有三": ["three_outside_three"],
-    "大风车": ["top_windmill"],
-    "四分之三": ["three_quarters_volume"],
-    "假阴": ["fake_bearish"],
-    "双枪": ["double_gun"],
-    "买盘枯竭": ["buy_exhaustion"],
-    "长阴短柱": ["long_shadow_short_volume"],
-}
 
 
 class OrchestrationEngine:
@@ -156,7 +121,8 @@ class OrchestrationEngine:
 
         # Step 3: Determine required tools and strategies
         tools_needed = self._get_tools_for_query(request.query)
-        strategies_needed = self._get_strategies_for_query(request.query)
+        primary_persona = route.primary if 'route' in dir() else (request.persona_priority or ["zettaranc"])[0]
+        strategies_needed = self._get_strategies_for_query(request.query, persona=primary_persona)
 
         # Step 3: Compute tools with caching
         tool_results = {}
@@ -243,90 +209,65 @@ class OrchestrationEngine:
         tools = set()
         query_lower = query.lower()
 
-        for keyword, tool_list in QUERY_TOOLS.items():
+        for keyword, tool_list in _DEFAULT_QUERY_TOOLS.items():
             if keyword.lower() in query_lower:
                 tools.update(tool_list)
 
-        # Always include kdj if strategies need it
+        # Financial report keywords
+        FINANCIAL_KEYWORDS = ["财报", "年报", "财务", "基本面"]
+        for keyword in FINANCIAL_KEYWORDS:
+            if keyword in query:
+                tools.add("financial_reports")
+                break
+
+        # Always include kdj if no specific tool requested
         if not tools:
             tools.add("kdj")
 
         return list(tools)
 
-    def _get_strategies_for_query(self, query: str) -> list[str]:
-        """Determine which strategies to run for the query."""
+    def _get_strategies_for_query(self, query: str, persona: str = "zettaranc") -> list[str]:
+        """Determine which strategies to run for the query (persona-specific)."""
         strategies = set()
         query_lower = query.lower()
 
-        for keyword, strategy_list in QUERY_STRATEGIES.items():
+        # Dynamically load persona-specific query mappings
+        query_mapping = self._load_strategy_keywords(persona)
+        for keyword, strategy_list in query_mapping.items():
             if keyword.lower() in query_lower:
                 strategies.update(strategy_list)
 
         return list(strategies)
 
+    def _load_strategy_keywords(self, persona: str) -> dict:
+        """Load keyword -> strategy mapping for a given persona."""
+        # TODO: generalize for multiple personas; currently zettaranc is the reference
+        if persona == "zettaranc":
+            try:
+                from personas.zettaranc.strategies import QUERY_STRATEGIES
+                return QUERY_STRATEGIES
+            except Exception:
+                pass
+        return {}
+
     def _compute_tool(self, tool_name: str, df: pd.DataFrame):
-        """Compute a tool and return the result."""
-        from tools.quant.technical import kdj, rsi_3, bbi, stochastic, macd, bollinger, atr
-
-        TOOL_MAP = {
-            "kdj": kdj,
-            "rsi_3": rsi_3,
-            "bbi": bbi,
-            "stochastic": stochastic,
-            "macd": macd,
-            "bollinger": bollinger,
-            "atr": atr,
-        }
-
-        tool = TOOL_MAP.get(tool_name)
-        if tool is None:
-            raise ValueError(f"Unknown tool: {tool_name}")
-
-        return tool.compute(df)
+        """Compute a tool and return the result via registry."""
+        if tool_name == "financial_reports":
+            tool = FinancialReportTool()
+            # FinancialReportTool expects a stock_code string, not a DataFrame
+            # Return the tool instance for later use by response generator
+            return tool
+        tool_cls = _get_tool(tool_name)
+        tool_instance = tool_cls()
+        return tool_instance.compute(df)
 
     def _run_strategy(self, strategy_name: str, df: pd.DataFrame, tool_results: dict):
-        """Run a strategy and return the signal."""
-        from personas.zettaranc.strategies import (
-            B1Strategy, B2BreakStrategy, FiveScoreStrategy,
-            SB1FakeFallStrategy, S1WarningStrategy, HalfReleaseStrategy,
-            UltimateB1Strategy, SuperB1Strategy, SingleNeedle20Strategy,
-            AbnormalMovementStrategy, PitTargetStrategy, ThreeWavesStrategy,
-            TwoThirtyRuleStrategy, DoublePonytailStrategy, ThreeOutsideThreeStrategy,
-            TopWindmillStrategy, ThreeQuartersVolumeStrategy, FakeBearishStrategy,
-            DoubleGunStrategy, BuyExhaustionStrategy, LongShadowShortVolumeStrategy,
-        )
-
-        STRATEGY_MAP = {
-            "b1": B1Strategy,
-            "b2_break": B2BreakStrategy,
-            "five_score": FiveScoreStrategy,
-            "sb1": SB1FakeFallStrategy,
-            "s1_warning": S1WarningStrategy,
-            "half_release": HalfReleaseStrategy,
-            "ultimate_b1": UltimateB1Strategy,
-            "super_b1": SuperB1Strategy,
-            "single_needle_20": SingleNeedle20Strategy,
-            "abnormal": AbnormalMovementStrategy,
-            "pit_target": PitTargetStrategy,
-            "three_waves": ThreeWavesStrategy,
-            "two_thirty": TwoThirtyRuleStrategy,
-            "double_ponytail": DoublePonytailStrategy,
-            "three_outside_three": ThreeOutsideThreeStrategy,
-            "top_windmill": TopWindmillStrategy,
-            "three_quarters_volume": ThreeQuartersVolumeStrategy,
-            "fake_bearish": FakeBearishStrategy,
-            "double_gun": DoubleGunStrategy,
-            "buy_exhaustion": BuyExhaustionStrategy,
-            "long_shadow_short_volume": LongShadowShortVolumeStrategy,
-        }
-
-        strategy_class = STRATEGY_MAP.get(strategy_name)
-        if strategy_class is None:
-            raise ValueError(f"Unknown strategy: {strategy_name}")
+        """Run a strategy and return the signal via registry."""
+        from personas.zettaranc.strategies import get_strategy
 
         # Use cached instance if available
         if strategy_name not in self._strategy_cache:
-            self._strategy_cache[strategy_name] = strategy_class()
+            self._strategy_cache[strategy_name] = get_strategy(strategy_name)
 
         strategy = self._strategy_cache[strategy_name]
         return strategy.detect(df)
@@ -691,7 +632,6 @@ class OrchestrationEngine:
             result["status"] = "不确定"
 
         # Position — try to extract percentage
-        import re
         pct_match = re.search(r"(\d+)%?", query)
         if pct_match:
             result["position"] = f"{pct_match.group(1)}%"
@@ -709,7 +649,7 @@ class OrchestrationEngine:
 
         if route == "A":  # 持仓诊断
             # Cost price
-            cost_match = __import__("re").search(r"成本[价]*[\s:：]*(\d+\.?\d*)", query)
+            cost_match = re.search(r"成本[价]*[\s:：]*(\d+\.?\d*)", query)
             if cost_match:
                 result["cost"] = cost_match.group(1)
             # PnL
@@ -727,13 +667,13 @@ class OrchestrationEngine:
             elif "感觉" in query or "凭感觉" in query:
                 result["signal"] = "凭感觉"
             # Days
-            day_match = __import__("re").search(r"(\d+)\s*天", query)
+            day_match = re.search(r"(\d+)\s*天", query)
             if day_match:
                 result["days"] = day_match.group(1)
 
         elif route == "B":  # 买点确认
             # J value
-            j_match = __import__("re").search(r"J\s*[值]*[\s:：]*(-?\d+\.?\d*)", query)
+            j_match = re.search(r"J\s*[值]*[\s:：]*(-?\d+\.?\d*)", query)
             if j_match:
                 result["j_value"] = j_match.group(1)
             # Brick color

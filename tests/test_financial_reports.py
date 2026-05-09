@@ -189,3 +189,16 @@ class TestFinancialReportTool:
         result = tool.analyze("INVALID_CODE_99999")
         assert "error" in result
         assert result["error"] == "Stock not found"
+
+
+def test_router_financial_keywords():
+    from orchestration.router import Router
+    router = Router()
+    result = router.route("分析一下贵州茅台的财报", ["zettaranc", "financial_analyst"])
+    assert result.primary == "financial_analyst"
+
+def test_engine_query_tools_mapping():
+    from orchestration.engine import OrchestrationEngine
+    engine = OrchestrationEngine()
+    tools = engine._get_tools_for_query("分析一下贵州茅台的财报")
+    assert "financial_reports" in tools
