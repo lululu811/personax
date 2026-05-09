@@ -1,0 +1,10 @@
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"superpowers:brainstorming"}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"superpowers:writing-plans"}
+{"t":0,"agent":"a68a7ef","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"superpowers:subagent-driven-development"}
+{"t":0,"agent":"a5ca9b1","agent_type":"general-purpose","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a5ca9b1","agent_type":"general-purpose","event":"agent_stop","success":true,"duration_ms":48602}
+{"t":0,"agent":"ae82d17","agent_type":"general-purpose","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"ae82d17","agent_type":"general-purpose","event":"agent_stop","success":true,"duration_ms":27648}
+{"t":0,"agent":"aa2a456","agent_type":"general-purpose","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"aa2a456","agent_type":"general-purpose","event":"agent_stop","success":true,"duration_ms":31065}

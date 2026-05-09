@@ -1,1 +1,45 @@
-# Empty — using all defaults from registry/personas.yaml
+# Z哥角色配置覆盖
+# 覆盖 registry/personas.yaml 中的默认设置
+
+# 量化层覆盖
+quant_overrides:
+  # 默认启用的指标
+  default_indicators:
+    - KDJ
+    - BBI
+    - MACD
+    - RSI
+    - ATR
+    - BOLLINGER
+    - STOCHASTIC
+  # 回测默认周期
+  default_backtest_period: 252
+  # 默认止损策略
+  default_stop_loss: "entry_k_low"
+
+# 交互行为覆盖
+interaction:
+  # 多轮问诊默认启用
+  multi_turn_diagnosis: true
+  # 首次激活时显示免责声明
+  show_disclaimer_on_first_activation: true
+  # 仓位警报阈值（%）
+  position_alert_threshold: 10
+
+# 知识库覆盖
+knowledge:
+  # 查询时返回的最大结果数
+  max_results: 5
+  # 相关性阈值
+  relevance_threshold: 0.7
+
+# 表达风格覆盖
+expression:
+  # 语言风格强度（1-10）
+  intensity: 8
+  # 黑话使用频率（1-10）
+  slang_frequency: 7
+  # 类比密度（1-10）
+  analogy_density: 8
+  # 反问句比例（%）
+  rhetorical_question_ratio: 30

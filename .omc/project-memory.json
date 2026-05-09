@@ -1,0 +1,488 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1778332230342,
+  "projectRoot": "/home/chenlei/001_AI/personax",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "requirements.txt"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "pip",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "python3 -m pytest tests/test_financial_reports.py -v",
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "scripts",
+      "tests"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    ":memory:": {
+      "path": ":memory:",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1778332230338,
+      "keyFiles": [
+        "chroma.sqlite3"
+      ]
+    },
+    "bridge": {
+      "path": "bridge",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1778332230339,
+      "keyFiles": [
+        "__init__.py",
+        "knowledge_bridge.py",
+        "quant_bridge.py"
+      ]
+    },
+    "data": {
+      "path": "data",
+      "purpose": "Data files",
+      "fileCount": 4,
+      "lastAccessed": 1778332230340,
+      "keyFiles": [
+        "__init__.py",
+        "db.py",
+        "schema.sql",
+        "sync.py"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1778332230340,
+      "keyFiles": [
+        "2026-05-06-personax-design.md"
+      ]
+    },
+    "knowledge": {
+      "path": "knowledge",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1778332230340,
+      "keyFiles": [
+        "__init__.py",
+        "chunker.py",
+        "embeddings.py",
+        "query.py",
+        "store.py"
+      ]
+    },
+    "orchestration": {
+      "path": "orchestration",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1778332230340,
+      "keyFiles": [
+        "__init__.py",
+        "engine.py",
+        "router.py",
+        "signal_aggregator.py",
+        "tool_cache.py"
+      ]
+    },
+    "personas": {
+      "path": "personas",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1778332230340,
+      "keyFiles": []
+    },
+    "quant": {
+      "path": "quant",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1778332230340,
+      "keyFiles": [
+        "__init__.py",
+        "api.py",
+        "registry.py"
+      ]
+    },
+    "registry": {
+      "path": "registry",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1778332230341,
+      "keyFiles": [
+        "data_sources.yaml",
+        "indicators.yaml",
+        "knowledge_bases.yaml",
+        "personas.yaml"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 4,
+      "lastAccessed": 1778332230341,
+      "keyFiles": [
+        "setup.py",
+        "sync_data.py",
+        "sync_knowledge.py",
+        "sync_knowledge_v2.py"
+      ]
+    },
+    "shared": {
+      "path": "shared",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1778332230341,
+      "keyFiles": [
+        "__init__.py",
+        "config.py"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 3,
+      "lastAccessed": 1778332230341,
+      "keyFiles": [
+        "__init__.py",
+        "test_architecture_integration.py",
+        "test_integration.py"
+      ]
+    },
+    "tools": {
+      "path": "tools",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1778332230341,
+      "keyFiles": [
+        "__init__.py"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "orchestration/engine.py",
+      "accessCount": 27,
+      "lastAccessed": 1778336982721,
+      "type": "file"
+    },
+    {
+      "path": "orchestration/response_generator.py",
+      "accessCount": 19,
+      "lastAccessed": 1778337916386,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/SKILL.md",
+      "accessCount": 6,
+      "lastAccessed": 1778336393493,
+      "type": "file"
+    },
+    {
+      "path": "orchestration/__init__.py",
+      "accessCount": 6,
+      "lastAccessed": 1778337069576,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/personality.md",
+      "accessCount": 5,
+      "lastAccessed": 1778334998221,
+      "type": "file"
+    },
+    {
+      "path": "personas/persona_loader.py",
+      "accessCount": 5,
+      "lastAccessed": 1778335215880,
+      "type": "file"
+    },
+    {
+      "path": "orchestration/router.py",
+      "accessCount": 4,
+      "lastAccessed": 1778336405457,
+      "type": "file"
+    },
+    {
+      "path": "bridge/quant_bridge.py",
+      "accessCount": 3,
+      "lastAccessed": 1778334003096,
+      "type": "file"
+    },
+    {
+      "path": "orchestration/signal_aggregator.py",
+      "accessCount": 3,
+      "lastAccessed": 1778336344726,
+      "type": "file"
+    },
+    {
+      "path": "tools/quant/technical/interface.py",
+      "accessCount": 3,
+      "lastAccessed": 1778336405446,
+      "type": "file"
+    },
+    {
+      "path": ".env",
+      "accessCount": 2,
+      "lastAccessed": 1778166054629,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/overrides.yaml",
+      "accessCount": 2,
+      "lastAccessed": 1778333249465,
+      "type": "file"
+    },
+    {
+      "path": "quant/api.py",
+      "accessCount": 2,
+      "lastAccessed": 1778333990113,
+      "type": "file"
+    },
+    {
+      "path": "bridge/knowledge_bridge.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334003231,
+      "type": "file"
+    },
+    {
+      "path": "data/sources/tushare_source.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334003321,
+      "type": "file"
+    },
+    {
+      "path": "registry/personas.yaml",
+      "accessCount": 2,
+      "lastAccessed": 1778334033592,
+      "type": "file"
+    },
+    {
+      "path": "knowledge/query.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334033605,
+      "type": "file"
+    },
+    {
+      "path": "registry/knowledge_bases.yaml",
+      "accessCount": 2,
+      "lastAccessed": 1778334033794,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/__init__.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334052369,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/pattern_strategies.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334068532,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/b1.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334068541,
+      "type": "file"
+    },
+    {
+      "path": "data/sync.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334068564,
+      "type": "file"
+    },
+    {
+      "path": "shared/config.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334173951,
+      "type": "file"
+    },
+    {
+      "path": "orchestration/tool_cache.py",
+      "accessCount": 2,
+      "lastAccessed": 1778334174005,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-05-09-financial-report-tool-design.md",
+      "accessCount": 2,
+      "lastAccessed": 1778336968259,
+      "type": "file"
+    },
+    {
+      "path": "requirements.txt",
+      "accessCount": 1,
+      "lastAccessed": 1778163822209,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "accessCount": 1,
+      "lastAccessed": 1778163825136,
+      "type": "file"
+    },
+    {
+      "path": "tests/test_architecture_integration.py",
+      "accessCount": 1,
+      "lastAccessed": 1778332287135,
+      "type": "file"
+    },
+    {
+      "path": "docs/2026-05-06-personax-design.md",
+      "accessCount": 1,
+      "lastAccessed": 1778332413882,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/b2_break.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333986106,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/five_score.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333986171,
+      "type": "file"
+    },
+    {
+      "path": "data/db.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333990165,
+      "type": "file"
+    },
+    {
+      "path": "quant/registry.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333990181,
+      "type": "file"
+    },
+    {
+      "path": "data/sources/base.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333990191,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/pit_target.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333996679,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/s1_warning.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333996684,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/three_waves.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333996692,
+      "type": "file"
+    },
+    {
+      "path": "personas/zettaranc/strategies/ultimate_b1.py",
+      "accessCount": 1,
+      "lastAccessed": 1778333996697,
+      "type": "file"
+    },
+    {
+      "path": "tools/quant/technical/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1778334003279,
+      "type": "file"
+    },
+    {
+      "path": "quant/indicators/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1778334003291,
+      "type": "file"
+    },
+    {
+      "path": "knowledge/store.py",
+      "accessCount": 1,
+      "lastAccessed": 1778334033630,
+      "type": "file"
+    },
+    {
+      "path": "registry/data_sources.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1778334033693,
+      "type": "file"
+    },
+    {
+      "path": "knowledge/sync.py",
+      "accessCount": 1,
+      "lastAccessed": 1778334033708,
+      "type": "file"
+    },
+    {
+      "path": "registry/indicators.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1778334033725,
+      "type": "file"
+    },
+    {
+      "path": "knowledge/embeddings.py",
+      "accessCount": 1,
+      "lastAccessed": 1778334033733,
+      "type": "file"
+    },
+    {
+      "path": "knowledge/chunker.py",
+      "accessCount": 1,
+      "lastAccessed": 1778334033742,
+      "type": "file"
+    },
+    {
+      "path": "tools/quant/technical/kdj.py",
+      "accessCount": 1,
+      "lastAccessed": 1778334068519,
+      "type": "file"
+    },
+    {
+      "path": "data/schema.sql",
+      "accessCount": 1,
+      "lastAccessed": 1778334068557,
+      "type": "file"
+    },
+    {
+      "path": "orchestration/conversation.py",
+      "accessCount": 1,
+      "lastAccessed": 1778336449435,
+      "type": "file"
+    },
+    {
+      "path": "tools/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1778337069614,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

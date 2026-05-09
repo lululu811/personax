@@ -1,7 +1,7 @@
 """Data models for financial report tool."""
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Literal
 
 
 @dataclass
@@ -9,9 +9,9 @@ class FinancialReport:
     """Single financial report document."""
     stock_code: str
     stock_name: str
-    report_type: str          # annual | q1 | semi | q3
+    report_type: Literal["annual", "q1", "semi", "q3"]
     year: int
-    period: str               # e.g. "2024年度" | "2024Q1"
+    period: str
     pdf_path: str
     raw_text: str = ""
 
@@ -39,5 +39,5 @@ class AnalysisResult:
     strengths: list[str] = field(default_factory=list)
     concerns: list[str] = field(default_factory=list)
     valuation_comment: str = ""
-    recommendation: str = ""
+    recommendation: Literal["买入", "持有", "观望", "回避", ""] = ""
     summary: str = ""

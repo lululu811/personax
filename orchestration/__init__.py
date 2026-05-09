@@ -13,11 +13,20 @@ Core components:
 from orchestration.router import Router
 from orchestration.tool_cache import ToolCache
 from orchestration.signal_aggregator import SignalAggregator
-from orchestration.engine import OrchestrationEngine
+from orchestration.engine import OrchestrationEngine, OrchestrationRequest, OrchestrationResponse
+from orchestration.response_generator import ResponseGenerator, GenerationContext
+from orchestration.conversation import ConversationManager, ConversationState, DiagnosisEngine
 
 __all__ = [
     "Router",
     "ToolCache",
     "SignalAggregator",
     "OrchestrationEngine",
+    "OrchestrationRequest",
+    "OrchestrationResponse",
+    "ResponseGenerator",
+    "GenerationContext",
+    "ConversationManager",
+    "ConversationState",
+    "DiagnosisEngine",
 ]

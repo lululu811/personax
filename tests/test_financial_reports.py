@@ -85,13 +85,23 @@ def test_analysis_result_defaults():
 def test_analysis_result_edge_cases():
     from tools.financial_reports.schemas import AnalysisResult
     result = AnalysisResult(
-        overall_health="",
-        risk_flags=[],
+        overall_health="差",
+        risk_flags=["商誉过高", "现金流紧张", "负债率飙升"],
         strengths=[],
-        concerns=[],
-        valuation_comment="",
-        recommendation="",
-        summary="",
+        concerns=["大股东减持", "审计非标"],
+        valuation_comment="严重高估",
+        recommendation="回避",
+        summary="多项指标恶化，建议回避",
     )
-    assert result.risk_flags == []
+    assert len(result.risk_flags) == 3
     assert result.strengths == []
+    assert result.recommendation == "回避"
+
+
+def test_default_list_isolation():
+    from tools.financial_reports.schemas import AnalysisResult
+    a = AnalysisResult()
+    b = AnalysisResult()
+    a.risk_flags.append("test")
+    assert b.risk_flags == []
+    assert a.risk_flags == ["test"]
