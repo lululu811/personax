@@ -105,3 +105,31 @@ def test_default_list_isolation():
     a.risk_flags.append("test")
     assert b.risk_flags == []
     assert a.risk_flags == ["test"]
+
+
+class TestDownloader:
+    def test_find_stock_by_code(self):
+        from tools.financial_reports.downloader import CnInfoDownloader
+        downloader = CnInfoDownloader()
+        code, info, market = downloader.find_stock("600519")
+        assert code == "600519"
+        assert market == "szse"
+        assert info is not None
+
+    def test_detect_market_a_share(self):
+        from tools.financial_reports.downloader import CnInfoDownloader
+        d = CnInfoDownloader()
+        assert d._detect_market("600519") == "szse"
+        assert d._detect_market("000001") == "szse"
+        assert d._detect_market("300001") == "szse"
+
+    def test_detect_market_hk(self):
+        from tools.financial_reports.downloader import CnInfoDownloader
+        d = CnInfoDownloader()
+        assert d._detect_market("00700") == "hke"
+        assert d._detect_market("09988") == "hke"
+
+    def test_to_chinese_year(self):
+        from tools.financial_reports.downloader import to_chinese_year
+        assert to_chinese_year(2024) == "二零二四"
+        assert to_chinese_year(1999) == "一九九九"
