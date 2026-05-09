@@ -195,7 +195,25 @@ class FinancialReportTool:
         metrics: list[FinancialMetrics],
         reports: list[FinancialReport],
     ) -> None:
-        """Async knowledge storage (best effort)."""
-        # Placeholder for async storage integration
-        # This could be wired to a knowledge base or vector store
-        pass
+        """Asynchronously store financial metrics to knowledge base.
+
+        Best-effort: failures are silently ignored to not block main flow.
+        """
+        try:
+            from knowledge.store import store_document
+
+            doc = {
+                "type": "financial_metrics",
+                "stock_code": stock_code,
+                "stock_name": stock_name,
+                "metrics": [
+                    {k: v for k, v in m.__dict__.items() if v is not None}
+                    for m in metrics
+                ],
+                "report_count": len(reports),
+                "timestamp": datetime.now().isoformat(),
+            }
+            store_document(f"financial_metrics_{stock_code}", doc)
+        except Exception:
+            # Knowledge storage is optional; don't fail the main request
+            pass
