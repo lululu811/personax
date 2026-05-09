@@ -133,3 +133,20 @@ class TestDownloader:
         from tools.financial_reports.downloader import to_chinese_year
         assert to_chinese_year(2024) == "二零二四"
         assert to_chinese_year(1999) == "一九九九"
+
+
+class TestExtractor:
+    def test_extract_nonexistent_file(self, tmp_path):
+        from tools.financial_reports.extractor import PDFExtractor
+        extractor = PDFExtractor()
+        text, metrics = extractor.extract(str(tmp_path / "nonexistent.pdf"))
+        assert text == ""
+        assert metrics.revenue is None
+
+    def test_clean_financial_text(self):
+        from tools.financial_reports.extractor import PDFExtractor
+        extractor = PDFExtractor()
+        raw = "  营业收入  \n\n\n  100亿元  "
+        cleaned = extractor._clean_text(raw)
+        assert "营业收入" in cleaned
+        assert "  " not in cleaned
