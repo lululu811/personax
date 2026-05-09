@@ -150,3 +150,27 @@ class TestExtractor:
         cleaned = extractor._clean_text(raw)
         assert "营业收入" in cleaned
         assert "  " not in cleaned
+
+
+class TestAnalyzer:
+    def test_analyze_with_mock_metrics(self):
+        from tools.financial_reports.analyzer import FinancialAnalyzer
+        from tools.financial_reports.schemas import FinancialMetrics
+
+        analyzer = FinancialAnalyzer()
+        metrics_history = [
+            FinancialMetrics(revenue=100, net_profit=50, roe=25, gross_margin=90),
+            FinancialMetrics(revenue=120, net_profit=60, roe=26, gross_margin=91),
+        ]
+        result = analyzer.analyze("贵州茅台", metrics_history, ["raw text"])
+
+        assert result.overall_health in ["优秀", "良好", "一般", "差"]
+        assert result.recommendation in ["买入", "持有", "观望", "回避"]
+        assert result.summary != ""
+
+    def test_analyze_empty_metrics(self):
+        from tools.financial_reports.analyzer import FinancialAnalyzer
+        analyzer = FinancialAnalyzer()
+        result = analyzer.analyze("Test", [], [])
+        assert result.overall_health == "未知"
+        assert "未能提取" in result.summary
