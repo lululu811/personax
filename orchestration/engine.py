@@ -23,6 +23,35 @@ from tools.financial_reports import FinancialReportTool
 
 
 @dataclass
+class Attachment:
+    """Multimodal attachment (image, PDF, audio, etc.).
+
+    Attributes:
+        type: "image", "pdf", "audio", or "file"
+        content: Raw bytes or file path string
+        mime_type: MIME type, e.g. "image/jpeg", "application/pdf"
+        filename: Optional original filename
+    """
+    type: str
+    content: bytes | str
+    mime_type: str = ""
+    filename: str = ""
+
+    def is_image(self) -> bool:
+        return self.type == "image" or self.mime_type.startswith("image/")
+
+    def is_pdf(self) -> bool:
+        return self.type == "pdf" or self.mime_type == "application/pdf"
+
+    def to_base64(self) -> str | None:
+        """Return base64-encoded content if bytes, else None."""
+        import base64
+        if isinstance(self.content, bytes):
+            return base64.b64encode(self.content).decode("utf-8")
+        return None
+
+
+@dataclass
 class OrchestrationRequest:
     """A request to the orchestration engine."""
     query: str                          # User's natural language query
@@ -32,6 +61,7 @@ class OrchestrationRequest:
     conflict_strategy: ConflictStrategy = ConflictStrategy.CONFIDENCE_WEIGHTED
     include_knowledge: bool = True      # Whether to query knowledge base
     conversation_id: Optional[str] = None  # For multi-turn conversation state
+    attachments: list[Attachment] = None  # Multimodal attachments (images, PDFs, etc.)
 
 
 @dataclass
@@ -70,6 +100,10 @@ class OrchestrationEngine:
     """
 
     def __init__(self):
+        # Startup env validation (non-blocking)
+        from shared.env_check import check_env
+        check_env()
+
         self.router = Router()
         self.tool_cache = ToolCache()
         self.signal_aggregator = SignalAggregator()
@@ -105,9 +139,10 @@ class OrchestrationEngine:
         personas = request.persona_priority or ["zettaranc"]
         route = self.router.route(request.query, personas)
 
-        # Step 2: Query knowledge base
+        # Step 2: Query knowledge base (vector DB + wiki)
         knowledge_snippets = []
         if request.include_knowledge:
+            # 2a: Vector knowledge base (ChromaDB)
             try:
                 from knowledge.query import query_knowledge, format_results
                 kb_results = query_knowledge(request.query, route.primary)
@@ -117,7 +152,18 @@ class OrchestrationEngine:
                     knowledge_snippets = [s.strip() for s in knowledge_snippets if s.strip()]
             except Exception:
                 # Knowledge base query is optional; don't fail the whole request
-                knowledge_snippets = []
+                pass
+
+            # 2b: Wiki knowledge base (keyword matching, no vectors)
+            try:
+                from knowledge.wiki_query import WikiKnowledgeQuery
+                wiki_q = WikiKnowledgeQuery()
+                wiki_context = wiki_q.query_to_context(request.query, max_results=2)
+                if wiki_context:
+                    knowledge_snippets.append(wiki_context)
+            except Exception:
+                # Wiki query is optional; don't fail the whole request
+                pass
 
         # Step 3: Determine required tools and strategies
         tools_needed = self._get_tools_for_query(request.query)
@@ -181,6 +227,7 @@ class OrchestrationEngine:
                     aggregated_signal=aggregated,
                     stock_code=request.stock_code,
                 ),
+                attachments=request.attachments,
             )
         else:
             # Fallback to template analysis
@@ -418,6 +465,7 @@ class OrchestrationEngine:
             tool_results=tool_results,
             strategy_results=strategy_results,
             questions=questions,
+            attachments=request.attachments,
         )
 
         return OrchestrationResponse(
@@ -473,6 +521,7 @@ class OrchestrationEngine:
             route_label=route_label,
             questions=questions,
             alert_msg=alert_msg if alert_triggered else "",
+            attachments=request.attachments,
         )
 
         return OrchestrationResponse(
@@ -580,6 +629,7 @@ class OrchestrationEngine:
                     aggregated_signal=aggregated,
                     stock_code=request.stock_code,
                 ),
+                attachments=request.attachments,
                 diagnosis_helper=diagnosis_helper,
                 history=state.get_recent_history(),
             )

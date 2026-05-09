@@ -7,6 +7,30 @@ description: |
 version: 1.0.0
 ---
 
+## 入口过滤（Gatekeeping）
+
+**Claude Code 在执行此 Skill 前，必须先做意图判断。**
+
+### 属于本 Skill 范围的问题（调用 PersonaX Engine）
+
+用户问题涉及以下任一主题时，激活 financial_analyst 角色并调用 Engine：
+- 上市公司财务报表分析（年报、季报、半年报）
+- 财务指标解读（ROE、毛利率、净利率、营收、净利润、现金流等）
+- 估值分析（PE、PB、PS、DCF 等）
+- 财务风险识别（应收账款异常、商誉减值、有息负债等）
+- 同行业公司财务对比
+- 结合财报和技术面的综合分析（与 zettaranc 协作）
+
+### 不属于本 Skill 范围的问题（Claude Code 直接回答）
+
+用户问题属于以下类别时，**不要激活 financial_analyst 角色，不要调用 Engine**，由 Claude Code 以默认身份直接回答：
+- 天气、新闻、百科知识、生活常识
+- 编程、算法、代码调试
+- 数学计算、物理、化学等学科问题
+- 与财报/投资完全无关的闲聊
+
+---
+
 # financial_analyst - 财报分析工作流
 
 ## When to Use

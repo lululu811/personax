@@ -1,0 +1,25 @@
+wiki:
+  # Wiki knowledge directories for keyword-based querying (no embeddings)
+  # Supports env var substitution: ${KNOWLEDGE_BASE}/.../wiki
+  #
+  # Priority: env vars (WIKI_PUBLIC_DIRS, WIKI_PERSONAL_DIRS) > this YAML config
+  # Env var format: comma-separated absolute paths
+  #
+  # Public knowledge bases (shared, project-level)
+  public:
+    fundamental-research:
+      path: "/home/chenlei/001_AI/knowledge_base/fundamental-research/wiki"
+      enabled: true
+      description: "基本面研究 wiki (公共)"
+
+  # Personal knowledge bases (user-specific,命名规则: 人名-knowledge)
+  # 个人路径可以通过 WIKI_PERSONAL_DIRS 环境变量覆盖
+  personal:
+    zettaranc:
+      path: "/home/chenlei/001_AI/knowledge_base/zettaranc-knowledge/wiki"
+      enabled: true
+      description: "Zettaranc 个人 wiki"
+
+  # Default max results per query
+  defaults:
+    max_results: 2

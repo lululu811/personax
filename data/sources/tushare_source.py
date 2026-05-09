@@ -159,8 +159,9 @@ class TushareSource(DataSource):
 
         ts.set_token(token)
         self.pro = ts.pro_api()
-        url = cfg.get("base_url", "http://tsy.xiaodefa.cn")
-        self.pro._DataApi__http_url = url
+        url = os.environ.get("TUSHARE_BASE_URL")
+        if url:
+            self.pro._DataApi__http_url = url
 
     def _standardize(self, df: pd.DataFrame, col_map: dict, source: str) -> pd.DataFrame:
         if df.empty:

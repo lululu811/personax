@@ -45,3 +45,17 @@ def __getattr__(name: str):
         import importlib
         return importlib.import_module(f"tools.quant.technical.{name}")
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# Query keyword -> tool name mapping (persona-agnostic)
+QUERY_TOOLS = {
+    "kdj": ["kdj"],
+    "rsi": ["rsi_3"],
+    "bbi": ["bbi"],
+    "macd": ["macd"],
+    "布林": ["bollinger"],
+    "bollinger": ["bollinger"],
+    "atr": ["atr"],
+    "随机": ["stochastic"],
+    "stochastic": ["stochastic"],
+}

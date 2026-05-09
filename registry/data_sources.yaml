@@ -7,7 +7,6 @@ data_sources:
     module: "data.sources.tushare_source"
     class: "TushareSource"
     config:
-      base_url: "http://tsy.xiaodefa.cn"
       token_env: "TUSHARE_TOKEN"
       rate_limit: 200
     supported_tables:

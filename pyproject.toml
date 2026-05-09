@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personax"
+version = "0.5.0"
+description = "人格化 AI Agent 投资分析系统 —— 让量化工具拥有灵魂"
+readme = "README.md"
+license = {text = "CC BY-NC 4.0"}
+requires-python = ">=3.12"
+authors = [
+    {name = "lululu811"},
+]
+keywords = [
+    "ai-agent", "quantitative-analysis", "stock-market",
+    "persona", "llm", "zettaranc", "investment",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "chromadb>=0.4.0",
+    "duckdb>=0.10.0",
+    "tushare>=1.3.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "tqdm>=4.65.0",
+    "pdfplumber>=0.11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/lululu811/personax"
+Repository = "https://github.com/lululu811/personax"
+Issues = "https://github.com/lululu811/personax/issues"
+Changelog = "https://github.com/lululu811/personax/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*", "scripts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

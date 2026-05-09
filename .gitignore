@@ -28,9 +28,14 @@ wheels/
 # Data & Cache
 data/cache/
 knowledge/vector_store/
+knowledge/.sync_state.json
 *.db
 *.sqlite
 *.sqlite3
+
+# ChromaDB in-memory artifacts
+:memory/
+:memory:/
 
 # IDE
 .vscode/
@@ -52,8 +57,5 @@ logs/
 .coverage
 htmlcov/
 
-# ChromaDB in-memory artifacts
-:memory/
-:memory/
-knowledge/.sync_state.json
-:memory:/
+# Claude Code / OMC state
+.omc/

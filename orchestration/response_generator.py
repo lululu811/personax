@@ -140,6 +140,7 @@ class ResponseGenerator:
         persona_config: PersonaConfig,
         context: GenerationContext | dict,
         history: list[dict] = None,
+        attachments: list[Any] = None,
     ) -> str:
         """Generate a persona-aware response.
 
@@ -156,7 +157,7 @@ class ResponseGenerator:
             context = GenerationContext(**context)
 
         if self.llm_available:
-            return self._generate_llm(query, persona_config, context, history)
+            return self._generate_llm(query, persona_config, context, history, attachments)
         else:
             return self._generate_template(query, persona_config, context)
 
@@ -171,6 +172,7 @@ class ResponseGenerator:
         tool_results: dict,
         strategy_results: dict,
         questions: list[str],
+        attachments: list[Any] = None,
     ) -> str:
         """Generate round-1 diagnosis questions with persona flavor."""
         if self.llm_available:
@@ -189,9 +191,10 @@ class ResponseGenerator:
                 + "\n\n要求：语气像聊天，短句为主，带设问。不要一次性全抛出去，像医生问诊一样层层深入。"
             )
 
+            user_content = self._build_user_content(user_prompt, attachments)
             messages = [
                 {"role": "system", "content": system + "\n\n" + "\n\n".join(context_parts)},
-                {"role": "user", "content": user_prompt},
+                {"role": "user", "content": user_content},
             ]
             return self._call_llm(messages)
 
@@ -214,6 +217,7 @@ class ResponseGenerator:
         route_label: str,
         questions: list[str],
         alert_msg: str = "",
+        attachments: list[Any] = None,
     ) -> str:
         """Generate round-2 route-specific questions."""
         if self.llm_available:
@@ -236,9 +240,10 @@ class ResponseGenerator:
             if alert_msg:
                 user_prompt = f"⚠️ 先打断提醒仓位问题：{alert_msg}\n\n" + user_prompt
 
+            user_content = self._build_user_content(user_prompt, attachments)
             messages = [
                 {"role": "system", "content": system + "\n\n" + "\n\n".join(context_parts)},
-                {"role": "user", "content": user_prompt},
+                {"role": "user", "content": user_content},
             ]
             return self._call_llm(messages)
 
@@ -263,6 +268,7 @@ class ResponseGenerator:
         context: GenerationContext,
         diagnosis_helper: str,
         history: list[dict] = None,
+        attachments: list[Any] = None,
     ) -> str:
         """Generate final diagnosis conclusion after round 2."""
         if isinstance(context, dict):
@@ -311,11 +317,12 @@ class ResponseGenerator:
                 f"4. 结尾用反问句或金句收尾"
             )
 
+            user_content = self._build_user_content(user_prompt, attachments)
             messages = [{"role": "system", "content": system}]
             if history:
                 for msg in history[-8:]:
                     messages.append(msg)
-            messages.append({"role": "user", "content": user_prompt})
+            messages.append({"role": "user", "content": user_content})
 
             return self._call_llm(messages)
 
@@ -353,9 +360,10 @@ class ResponseGenerator:
         persona_config: PersonaConfig,
         context: GenerationContext,
         history: list[dict] = None,
+        attachments: list[Any] = None,
     ) -> str:
         """Generate response using LLM API."""
-        messages = self._build_messages(query, persona_config, context, history)
+        messages = self._build_messages(query, persona_config, context, history, attachments)
         return self._call_llm(messages)
 
     def _call_llm(self, messages: list[dict]) -> str:
@@ -374,10 +382,33 @@ class ResponseGenerator:
             return f"[LLM 调用失败: {e}]\n\n{self._build_fallback_from_messages(messages)}"
 
     def _call_dashscope(self, messages: list[dict]) -> str:
-        """Call DashScope (Tongyi Qianwen) API."""
+        """Call DashScope (Tongyi Qianwen) API with multimodal support."""
+        # Convert generic content blocks to DashScope/OpenAI-compatible format
+        dashscope_messages = []
+        for msg in messages:
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                ds_content = []
+                for block in content:
+                    if block.get("type") == "image":
+                        mime = block.get("mime_type", "image/jpeg")
+                        data = block.get("data", "")
+                        ds_content.append({
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{mime};base64,{data}"},
+                        })
+                    elif block.get("type") == "text":
+                        ds_content.append({
+                            "type": "text",
+                            "text": block.get("text", ""),
+                        })
+                dashscope_messages.append({"role": msg["role"], "content": ds_content})
+            else:
+                dashscope_messages.append(msg)
+
         response = self._client.call(
             model=self.model,
-            messages=messages,
+            messages=dashscope_messages,
             result_format="message",
             max_tokens=1500,
             temperature=0.7,
@@ -388,10 +419,33 @@ class ResponseGenerator:
             raise RuntimeError(f"DashScope API error: {response.status_code}")
 
     def _call_openai(self, messages: list[dict]) -> str:
-        """Call OpenAI-compatible API."""
+        """Call OpenAI-compatible API with multimodal support."""
+        # Convert generic content blocks to OpenAI format
+        openai_messages = []
+        for msg in messages:
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                openai_content = []
+                for block in content:
+                    if block.get("type") == "image":
+                        mime = block.get("mime_type", "image/jpeg")
+                        data = block.get("data", "")
+                        openai_content.append({
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{mime};base64,{data}"},
+                        })
+                    elif block.get("type") == "text":
+                        openai_content.append({
+                            "type": "text",
+                            "text": block.get("text", ""),
+                        })
+                openai_messages.append({"role": msg["role"], "content": openai_content})
+            else:
+                openai_messages.append(msg)
+
         response = self._client.chat.completions.create(
             model=self.model,
-            messages=messages,
+            messages=openai_messages,
             max_tokens=1500,
             temperature=0.7,
         )
@@ -449,7 +503,26 @@ class ResponseGenerator:
             if role == "system":
                 system_parts.append(content)
             elif role in ("user", "assistant"):
-                anthropic_messages.append({"role": role, "content": content})
+                if isinstance(content, list):
+                    anthropic_content = []
+                    for block in content:
+                        if block.get("type") == "image":
+                            anthropic_content.append({
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": block.get("mime_type", "image/jpeg"),
+                                    "data": block.get("data", ""),
+                                },
+                            })
+                        elif block.get("type") == "text":
+                            anthropic_content.append({
+                                "type": "text",
+                                "text": block.get("text", ""),
+                            })
+                    anthropic_messages.append({"role": role, "content": anthropic_content})
+                else:
+                    anthropic_messages.append({"role": role, "content": content})
 
         # If no user message at start, Anthropic requires alternating user/assistant
         # Ensure first message is from user
@@ -465,8 +538,13 @@ class ResponseGenerator:
         persona_config: PersonaConfig,
         context: GenerationContext,
         history: list[dict] = None,
+        attachments: list[Any] = None,
     ) -> list[dict]:
-        """Build messages for LLM API call."""
+        """Build messages for LLM API call.
+
+        Supports multimodal input: if image attachments are provided,
+        the user message content becomes a list of content blocks.
+        """
         messages = []
 
         # System prompt: persona identity + expression rules
@@ -503,10 +581,30 @@ class ResponseGenerator:
             for msg in history[-6:]:
                 messages.append(msg)
 
-        # User query
-        messages.append({"role": "user", "content": query})
+        # Build user message: text + optional image attachments
+        user_content = self._build_user_content(query, attachments)
+        messages.append({"role": "user", "content": user_content})
 
         return messages
+
+    def _build_user_content(self, query: str, attachments: list[Any] | None) -> str | list[dict]:
+        """Build user message content. Returns plain text or list of content blocks."""
+        if not attachments:
+            return query
+
+        content_blocks = []
+        for att in attachments:
+            if hasattr(att, "is_image") and att.is_image():
+                b64 = att.to_base64()
+                if b64:
+                    content_blocks.append({
+                        "type": "image",
+                        "mime_type": att.mime_type or "image/jpeg",
+                        "data": b64,
+                    })
+        # Append text query last (convention: images first, then text)
+        content_blocks.append({"type": "text", "text": query})
+        return content_blocks
 
     def _build_diagnosis_system(self, persona_name: str) -> str:
         """Build a minimal system prompt for diagnosis rounds."""

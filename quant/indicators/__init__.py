@@ -1,9 +1,11 @@
 """Quant indicators package.
 
-Note: Zettaranc indicators have been migrated to the new architecture:
-- Generic tools: tools/quant/technical/
-- Zettaranc strategies: personas/zettaranc/strategies/
-- Orchestration: orchestration/
+Legacy indicator package. Most indicators have been migrated to:
+    tools/quant/technical/
 
-This package is kept for backward compatibility only.
+Only MA remains here as it does not exist in the new architecture.
 """
+
+from quant.indicators.ma import calculate_ma
+
+__all__ = ["calculate_ma"]

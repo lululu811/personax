@@ -9,28 +9,55 @@ from typing import Optional
 
 from tools.financial_reports.schemas import (
     AnalysisResult,
+    DuPontAnalysis,
     FinancialMetrics,
     FinancialReport,
+    FiveDimensionScores,
 )
 from tools.financial_reports.downloader import CnInfoDownloader
 from tools.financial_reports.extractor import PDFExtractor
 from tools.financial_reports.analyzer import FinancialAnalyzer
+from tools.financial_reports.valuation import ValuationAnalyzer, ValuationResult
 
 __all__ = [
     "FinancialReport",
     "FinancialMetrics",
     "AnalysisResult",
+    "DuPontAnalysis",
+    "FiveDimensionScores",
     "FinancialReportTool",
+    "ValuationAnalyzer",
+    "ValuationResult",
 ]
 
 
 class FinancialReportTool:
     """Unified tool to download, extract, and analyze stock financial reports."""
 
-    def __init__(self):
+    def __init__(self, generator=None, persona_config=None):
+        # Optionally inject a ResponseGenerator; otherwise create one
+        if generator is None:
+            try:
+                from orchestration.response_generator import ResponseGenerator
+
+                generator = ResponseGenerator()
+            except Exception:
+                generator = None
+        self.generator = generator
+
+        # Load financial_analyst persona config if not injected
+        if persona_config is None:
+            try:
+                from personas.persona_loader import load_persona
+
+                persona_config = load_persona("financial_analyst")
+            except Exception:
+                persona_config = None
+        self.persona_config = persona_config
+
         self.downloader = CnInfoDownloader()
-        self.extractor = PDFExtractor()
-        self.analyzer = FinancialAnalyzer()
+        self.extractor = PDFExtractor(generator=generator, persona_config=persona_config)
+        self.analyzer = FinancialAnalyzer(generator=generator, persona_config=persona_config)
 
     def analyze(
         self,
