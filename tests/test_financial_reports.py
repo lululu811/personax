@@ -174,3 +174,18 @@ class TestAnalyzer:
         result = analyzer.analyze("Test", [], [])
         assert result.overall_health == "未知"
         assert "未能提取" in result.summary
+
+
+class TestFinancialReportTool:
+    def test_tool_instantiation(self):
+        from tools.financial_reports import FinancialReportTool
+        tool = FinancialReportTool()
+        assert tool is not None
+        assert hasattr(tool, "analyze")
+
+    def test_analyze_invalid_stock(self):
+        from tools.financial_reports import FinancialReportTool
+        tool = FinancialReportTool()
+        result = tool.analyze("INVALID_CODE_99999")
+        assert "error" in result
+        assert result["error"] == "Stock not found"
