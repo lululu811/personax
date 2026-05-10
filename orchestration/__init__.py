@@ -16,6 +16,7 @@ from orchestration.signal_aggregator import SignalAggregator
 from orchestration.engine import OrchestrationEngine, OrchestrationRequest, OrchestrationResponse
 from orchestration.response_generator import ResponseGenerator, GenerationContext
 from orchestration.conversation import ConversationManager, ConversationState, DiagnosisEngine
+from orchestration.models import StrategySignal
 
 __all__ = [
     "Router",
@@ -29,4 +30,5 @@ __all__ = [
     "ConversationManager",
     "ConversationState",
     "DiagnosisEngine",
+    "StrategySignal",
 ]

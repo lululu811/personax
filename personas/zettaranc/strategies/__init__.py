@@ -14,7 +14,8 @@ Usage:
 import inspect
 from typing import Type
 
-from personas.zettaranc.strategies.b1 import B1Strategy, StrategySignal
+from personas.zettaranc.strategies.b1 import B1Strategy
+from orchestration.models import StrategySignal
 from personas.zettaranc.strategies.b2_break import B2BreakStrategy
 from personas.zettaranc.strategies.five_score import FiveScoreStrategy, FiveScoreResult
 from personas.zettaranc.strategies.sb1_fake_fall import SB1FakeFallStrategy

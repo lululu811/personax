@@ -54,7 +54,7 @@ class MACDTool:
         # Signals
         dif_above_dea = dif > dea
         signals = {
-            "golden_cross": (~dif_above_dea.shift(1).fillna(False)) & dif_above_dea,
+            "golden_cross": (dif_above_dea.shift(1).fillna(False).eq(False)) & dif_above_dea,
             "dead_cross": (dif_above_dea.shift(1).fillna(False)) & (~dif_above_dea),
             "above_zero": dif > 0,
             "below_zero": dif < 0,

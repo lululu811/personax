@@ -92,12 +92,20 @@ class Router:
         # Classify intent
         intent = self._classify_intent(query_lower)
 
+        # Count keyword matches for the primary persona
+        match_count = sum(
+            1 for kw, p in self.KEYWORD_PERSONAS.items()
+            if kw.lower() in query_lower and p == primary
+        )
+        # Base confidence 0.5, +0.1 per keyword match, capped at 0.95
+        confidence = min(0.5 + match_count * 0.1, 0.95)
+
         return RouteResult(
             primary=primary,
             secondary=secondary,
             intent=intent,
-            confidence=0.8,  # TODO: implement confidence scoring
-            reasoning=f"Primary={primary}, intent={intent}",
+            confidence=confidence,
+            reasoning=f"Primary={primary}, intent={intent}, keyword_matches={match_count}",
         )
 
     def _find_primary(self, query: str, personas: list[str]) -> str:

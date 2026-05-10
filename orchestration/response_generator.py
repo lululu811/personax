@@ -35,6 +35,15 @@ from typing import Any, Optional
 
 from personas.persona_loader import PersonaConfig
 
+# Provider configuration: model_default, model_env, key_env, url_env
+_PROVIDER_CONFIG = {
+    "minimax": {"model": "MiniMax-M2.7-highspeed", "model_env": "ANTHROPIC_MODEL", "key_env": ["ANTHROPIC_AUTH_TOKEN", "LLM_API_KEY"], "url_env": ["ANTHROPIC_BASE_URL", "LLM_BASE_URL"]},
+    "kimi": {"model": "kimi-for-coding", "model_env": "ANTHROPIC_DEFAULT_OPUS_MODEL", "key_env": ["ANTHROPIC_API_KEY", "LLM_API_KEY"], "url_env": ["ANTHROPIC_BASE_URL", "LLM_BASE_URL"]},
+    "bailian": {"model": "qwen3.6-plus", "model_env": "ANTHROPIC_DEFAULT_HAIKU_MODEL", "key_env": ["ANTHROPIC_AUTH_TOKEN", "LLM_API_KEY"], "url_env": ["ANTHROPIC_BASE_URL", "LLM_BASE_URL"]},
+    "anthropic": {"model": "claude-3-sonnet-20240229", "model_env": "ANTHROPIC_MODEL", "key_env": ["ANTHROPIC_AUTH_TOKEN", "LLM_API_KEY"], "url_env": ["ANTHROPIC_BASE_URL", "LLM_BASE_URL"]},
+    "dashscope": {"model": "qwen-plus", "model_env": "LLM_MODEL", "key_env": ["LLM_API_KEY", "DASHSCOPE_API_KEY"], "url_env": ["LLM_BASE_URL"]},
+}
+
 
 @dataclass
 class GenerationContext:
@@ -71,27 +80,10 @@ class ResponseGenerator:
         # Provider selection: explicit > env > default
         self.provider = (provider or os.environ.get("LLM_PROVIDER", "dashscope")).lower()
 
-        # Resolve credentials per provider
-        if self.provider == "minimax":
-            self.model = model or os.environ.get("ANTHROPIC_MODEL") or os.environ.get("LLM_MODEL", "MiniMax-M2.7-highspeed")
-            self._api_key = api_key or os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("LLM_API_KEY")
-            self._base_url = base_url or os.environ.get("ANTHROPIC_BASE_URL") or os.environ.get("LLM_BASE_URL")
-        elif self.provider == "kimi":
-            self.model = model or os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL") or os.environ.get("LLM_MODEL", "kimi-for-coding")
-            self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("LLM_API_KEY")
-            self._base_url = base_url or os.environ.get("ANTHROPIC_BASE_URL") or os.environ.get("LLM_BASE_URL")
-        elif self.provider == "bailian":
-            self.model = model or os.environ.get("ANTHROPIC_DEFAULT_HAIKU_MODEL") or os.environ.get("LLM_MODEL", "qwen3.6-plus")
-            self._api_key = api_key or os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("LLM_API_KEY")
-            self._base_url = base_url or os.environ.get("ANTHROPIC_BASE_URL") or os.environ.get("LLM_BASE_URL")
-        elif self.provider == "anthropic":
-            self.model = model or os.environ.get("ANTHROPIC_MODEL") or os.environ.get("LLM_MODEL", "claude-3-sonnet-20240229")
-            self._api_key = api_key or os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("LLM_API_KEY")
-            self._base_url = base_url or os.environ.get("ANTHROPIC_BASE_URL") or os.environ.get("LLM_BASE_URL")
-        else:
-            self.model = model or os.environ.get("LLM_MODEL", "qwen-plus")
-            self._api_key = api_key or os.environ.get("LLM_API_KEY") or os.environ.get("DASHSCOPE_API_KEY")
-            self._base_url = base_url or os.environ.get("LLM_BASE_URL")
+        cfg = _PROVIDER_CONFIG.get(self.provider, _PROVIDER_CONFIG["dashscope"])
+        self.model = model or os.environ.get(cfg["model_env"]) or os.environ.get("LLM_MODEL", cfg["model"])
+        self._api_key = api_key or next((os.environ.get(k) for k in cfg["key_env"] if os.environ.get(k)), None)
+        self._base_url = base_url or next((os.environ.get(k) for k in cfg["url_env"] if os.environ.get(k)), None)
 
         self._client = None
         self._init_client()

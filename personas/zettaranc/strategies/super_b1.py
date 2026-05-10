@@ -23,7 +23,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from tools.quant.technical import kdj
-from personas.zettaranc.strategies.b1 import StrategySignal
+from orchestration.models import StrategySignal
 
 
 @dataclass

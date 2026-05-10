@@ -64,10 +64,10 @@ class StochasticTool:
         short_above_medium = short > medium
 
         signals["white_cross_red"] = (
-            (~short_above_long.shift(1).fillna(False)) & short_above_long & (long_term < 20)
+            (short_above_long.shift(1).fillna(False).eq(False)) & short_above_long & (long_term < 20)
         )
         signals["white_cross_yellow"] = (
-            (~short_above_medium.shift(1).fillna(False)) & short_above_medium & (medium < 30)
+            (short_above_medium.shift(1).fillna(False).eq(False)) & short_above_medium & (medium < 30)
         )
 
         return ToolResult(

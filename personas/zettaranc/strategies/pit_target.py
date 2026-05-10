@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from typing import Optional
 import pandas as pd
 
-from personas.zettaranc.strategies.b1 import StrategySignal
+from orchestration.models import StrategySignal
 
 
 @dataclass

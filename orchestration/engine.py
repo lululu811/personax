@@ -111,6 +111,7 @@ class OrchestrationEngine:
         self.response_generator = ResponseGenerator()
         self.conversation_manager = ConversationManager()
         self._strategy_cache = {}  # strategy_name -> strategy instance
+        self._wiki_query = None  # Lazy-init WikiKnowledgeQuery singleton
 
     def execute(self, request: OrchestrationRequest) -> OrchestrationResponse:
         """Execute an orchestration request.
@@ -141,30 +142,7 @@ class OrchestrationEngine:
         route = self.router.route(request.query, personas)
 
         # Step 2: Query knowledge base (vector DB + wiki)
-        knowledge_snippets = []
-        if request.include_knowledge:
-            # 2a: Vector knowledge base (ChromaDB)
-            try:
-                from knowledge.query import query_knowledge, format_results
-                kb_results = query_knowledge(request.query, route.primary)
-                formatted = format_results(kb_results)
-                if formatted.strip():
-                    knowledge_snippets = formatted.split("\n---\n")
-                    knowledge_snippets = [s.strip() for s in knowledge_snippets if s.strip()]
-            except Exception:
-                # Knowledge base query is optional; don't fail the whole request
-                pass
-
-            # 2b: Wiki knowledge base (keyword matching, no vectors)
-            try:
-                from knowledge.wiki_query import WikiKnowledgeQuery
-                wiki_q = WikiKnowledgeQuery()
-                wiki_context = wiki_q.query_to_context(request.query, max_results=2)
-                if wiki_context:
-                    knowledge_snippets.append(wiki_context)
-            except Exception:
-                # Wiki query is optional; don't fail the whole request
-                pass
+        knowledge_snippets = self._query_knowledge(request.query, route.primary) if request.include_knowledge else []
 
         # Step 2b: WebSearch (if persona has web_search enabled)
         web_search_results = ""
@@ -188,44 +166,17 @@ class OrchestrationEngine:
 
         # Step 3: Determine required tools and strategies
         tools_needed = self._get_tools_for_query(request.query)
-        primary_persona = route.primary if 'route' in dir() else (request.persona_priority or ["zettaranc"])[0]
+        primary_persona = route.primary
         strategies_needed = self._get_strategies_for_query(request.query, persona=primary_persona)
 
         # Step 3: Compute tools with caching
-        tool_results = {}
-        if request.df is not None:
-            df_hash = self.tool_cache.hash_dataframe(request.df)
-
-            for tool_name in tools_needed:
-                cached = self.tool_cache.get(tool_name, df_hash)
-                if cached is not None:
-                    tool_results[tool_name] = cached
-                else:
-                    # Compute tool
-                    tool_result = self._compute_tool(tool_name, request.df)
-                    tool_results[tool_name] = tool_result
-                    self.tool_cache.set(tool_name, df_hash, tool_result)
+        tool_results = self._compute_tools(tools_needed, request.df)
 
         # Step 4: Run strategies
-        strategy_results = {}
-        if request.df is not None:
-            for strategy_name in strategies_needed:
-                strategy_signal = self._run_strategy(strategy_name, request.df, tool_results, persona=primary_persona)
-                strategy_results[strategy_name] = strategy_signal
+        strategy_results = self._run_strategies(strategies_needed, request.df, tool_results, persona=primary_persona)
 
         # Step 5: Build persona signals for aggregation
-        persona_signals = []
-        # Convert strategy results to PersonaSignal for any persona
-        for persona_name in (request.persona_priority or []):
-            for name, signal in strategy_results.items():
-                if signal.action != "hold":
-                    persona_signals.append(PersonaSignal(
-                        persona=persona_name,
-                        action=signal.action,
-                        confidence=signal.confidence,
-                        reason=signal.reason,
-                        metadata=signal.metadata,
-                    ))
+        persona_signals = self._build_persona_signals(strategy_results, request.persona_priority)
 
         # Step 6: Aggregate signals
         self.signal_aggregator.strategy = request.conflict_strategy
@@ -358,12 +309,12 @@ class OrchestrationEngine:
 
         # Adapt fupeng strategy results to StrategySignal format
         if persona == "fupeng":
-            from personas.zettaranc.strategies.b1 import StrategySignal
+            from orchestration.models import StrategySignal
             return self._adapt_fupeng_signal(strategy_name, raw_result)
 
         # Adapt boss_mo strategy results to StrategySignal format
         if persona == "boss_mo":
-            from personas.zettaranc.strategies.b1 import StrategySignal
+            from orchestration.models import StrategySignal
             return self._adapt_boss_mo_signal(strategy_name, raw_result)
 
         return raw_result
@@ -375,7 +326,7 @@ class OrchestrationEngine:
         ExplosiveGoldResult, ShrinkingCircleResult) that the downstream
         _build_analysis and _summarize_strategies can't consume directly.
         """
-        from personas.zettaranc.strategies.b1 import StrategySignal
+        from orchestration.models import StrategySignal
 
         if strategy_name == "dumbbell":
             if raw_result.position == "defensive":
@@ -440,7 +391,7 @@ class OrchestrationEngine:
 
     def _adapt_boss_mo_signal(self, strategy_name: str, raw_result):
         """Convert boss_mo strategy result to StrategySignal format."""
-        from personas.zettaranc.strategies.b1 import StrategySignal
+        from orchestration.models import StrategySignal
 
         if strategy_name == "rhythm":
             if raw_result.phase in ("rising_late", "falling_late"):
@@ -523,6 +474,83 @@ class OrchestrationEngine:
             action="hold", confidence=0.0, reason=str(raw_result), metadata={}
         )
 
+    # ------------------------------------------------------------------ #
+    #  Shared computation helpers (deduplicated)
+    # ------------------------------------------------------------------ #
+
+    def _compute_tools(self, tools_needed: list[str], df: pd.DataFrame) -> dict:
+        """Compute tools with caching. Returns empty dict if df is None."""
+        tool_results = {}
+        if df is None:
+            return tool_results
+        df_hash = self.tool_cache.hash_dataframe(df)
+        for tool_name in tools_needed:
+            cached = self.tool_cache.get(tool_name, df_hash)
+            if cached is not None:
+                tool_results[tool_name] = cached
+            else:
+                tool_result = self._compute_tool(tool_name, df)
+                tool_results[tool_name] = tool_result
+                self.tool_cache.set(tool_name, df_hash, tool_result)
+        return tool_results
+
+    def _run_strategies(
+        self, strategies_needed: list[str], df: pd.DataFrame,
+        tool_results: dict, persona: str,
+    ) -> dict:
+        """Run strategies. Returns empty dict if df is None."""
+        strategy_results = {}
+        if df is None:
+            return strategy_results
+        for strategy_name in strategies_needed:
+            strategy_signal = self._run_strategy(strategy_name, df, tool_results, persona=persona)
+            strategy_results[strategy_name] = strategy_signal
+        return strategy_results
+
+    def _query_knowledge(self, query: str, persona: str, include_wiki: bool = True) -> list[str]:
+        """Query knowledge base (vector DB + optionally wiki). Returns empty list on failure."""
+        knowledge_snippets = []
+        # 2a: Vector knowledge base (ChromaDB)
+        try:
+            from knowledge.query import query_knowledge, format_results
+            kb_results = query_knowledge(query, persona)
+            formatted = format_results(kb_results)
+            if formatted.strip():
+                knowledge_snippets = formatted.split("\n---\n")
+                knowledge_snippets = [s.strip() for s in knowledge_snippets if s.strip()]
+        except Exception:
+            pass
+        # 2b: Wiki knowledge base (keyword matching, no vectors)
+        if include_wiki:
+            try:
+                from knowledge.wiki_query import WikiKnowledgeQuery
+                if self._wiki_query is None:
+                    self._wiki_query = WikiKnowledgeQuery()
+                wiki_q = self._wiki_query
+                wiki_context = wiki_q.query_to_context(query, max_results=2)
+                if wiki_context:
+                    knowledge_snippets.append(wiki_context)
+            except Exception:
+                pass
+        return knowledge_snippets
+
+    def _build_persona_signals(
+        self, strategy_results: dict, persona_priority: list[str],
+    ) -> list:
+        """Build PersonaSignal list from non-hold strategy results."""
+        persona_signals = []
+        for persona_name in (persona_priority or []):
+            for name, signal in strategy_results.items():
+                if signal.action != "hold":
+                    persona_signals.append(PersonaSignal(
+                        persona=persona_name,
+                        action=signal.action,
+                        confidence=signal.confidence,
+                        reason=signal.reason,
+                        metadata=signal.metadata,
+                    ))
+        return persona_signals
+
     def _build_analysis(
         self,
         route: RouteResult,
@@ -577,11 +605,10 @@ class OrchestrationEngine:
 
         # Stock-related keywords that trigger diagnosis
         diagnose_keywords = [
-            "怎么看", "能买吗", "能卖吗", "要不要买", "要不要卖",
+            "能买吗", "能卖吗", "要不要买", "要不要卖",
             "持有", "建仓", "清仓", "减仓", "加仓", "被套", "浮盈", "浮亏",
-            "短线", "长线", "止损", "止盈",
-            "怎么样", "如何", "想", "该", "建议", "点评", "分析",
-            "买", "卖", "入", "出", "操作",
+            "止损", "止盈",
+            "买", "卖",
         ]
         if any(kw in query_lower for kw in diagnose_keywords):
             return True
@@ -627,35 +654,11 @@ class OrchestrationEngine:
         tools_needed = self._get_tools_for_query(request.query)
         strategies_needed = self._get_strategies_for_query(request.query, persona=route.primary)
 
-        tool_results = {}
-        strategy_results = {}
-        if request.df is not None:
-            df_hash = self.tool_cache.hash_dataframe(request.df)
-            for tool_name in tools_needed:
-                cached = self.tool_cache.get(tool_name, df_hash)
-                if cached is not None:
-                    tool_results[tool_name] = cached
-                else:
-                    result = self._compute_tool(tool_name, request.df)
-                    tool_results[tool_name] = result
-                    self.tool_cache.set(tool_name, df_hash, result)
-
-            for strategy_name in strategies_needed:
-                signal = self._run_strategy(strategy_name, request.df, tool_results, persona=route.primary)
-                strategy_results[strategy_name] = signal
+        tool_results = self._compute_tools(tools_needed, request.df)
+        strategy_results = self._run_strategies(strategies_needed, request.df, tool_results, persona=route.primary)
 
         # Knowledge query
-        knowledge_snippets = []
-        if request.include_knowledge:
-            try:
-                from knowledge.query import query_knowledge, format_results
-                kb_results = query_knowledge(request.query, route.primary)
-                formatted = format_results(kb_results)
-                if formatted.strip():
-                    knowledge_snippets = formatted.split("\n---\n")
-                    knowledge_snippets = [s.strip() for s in knowledge_snippets if s.strip()]
-            except Exception:
-                knowledge_snippets = []
+        knowledge_snippets = self._query_knowledge(request.query, route.primary, include_wiki=False) if request.include_knowledge else []
 
         # Advance state
         state.advance_round()  # 0 -> 1
@@ -764,51 +767,16 @@ class OrchestrationEngine:
         tools_needed = self._get_tools_for_query(request.query)
         strategies_needed = self._get_strategies_for_query(request.query, persona=route.primary)
 
-        tool_results = {}
-        strategy_results = {}
-        if request.df is not None:
-            df_hash = self.tool_cache.hash_dataframe(request.df)
-            for tool_name in tools_needed:
-                cached = self.tool_cache.get(tool_name, df_hash)
-                if cached is not None:
-                    tool_results[tool_name] = cached
-                else:
-                    result = self._compute_tool(tool_name, request.df)
-                    tool_results[tool_name] = result
-                    self.tool_cache.set(tool_name, df_hash, result)
-
-            for strategy_name in strategies_needed:
-                signal = self._run_strategy(strategy_name, request.df, tool_results, persona=route.primary)
-                strategy_results[strategy_name] = signal
+        tool_results = self._compute_tools(tools_needed, request.df)
+        strategy_results = self._run_strategies(strategies_needed, request.df, tool_results, persona=route.primary)
 
         # Aggregate signals
-        persona_signals = []
-        for persona_name in (request.persona_priority or []):
-            for name, signal in strategy_results.items():
-                if signal.action != "hold":
-                    persona_signals.append(PersonaSignal(
-                        persona=persona_name,
-                        action=signal.action,
-                        confidence=signal.confidence,
-                        reason=signal.reason,
-                        metadata=signal.metadata,
-                    ))
-
+        persona_signals = self._build_persona_signals(strategy_results, request.persona_priority)
         self.signal_aggregator.strategy = request.conflict_strategy
         aggregated = self.signal_aggregator.aggregate(persona_signals)
 
         # Knowledge query
-        knowledge_snippets = []
-        if request.include_knowledge:
-            try:
-                from knowledge.query import query_knowledge, format_results
-                kb_results = query_knowledge(request.query, route.primary)
-                formatted = format_results(kb_results)
-                if formatted.strip():
-                    knowledge_snippets = formatted.split("\n---\n")
-                    knowledge_snippets = [s.strip() for s in knowledge_snippets if s.strip()]
-            except Exception:
-                knowledge_snippets = []
+        knowledge_snippets = self._query_knowledge(request.query, route.primary, include_wiki=False) if request.include_knowledge else []
 
         # Generate rule-based diagnosis helper text
         diagnosis_helper = DiagnosisEngine.generate_diagnosis(

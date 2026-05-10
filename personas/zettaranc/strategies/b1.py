@@ -17,20 +17,10 @@ Usage:
     print(signal.action)  # "buy", "sell", "hold"
 """
 
-from dataclasses import dataclass
-from typing import Optional
 import pandas as pd
 
 from tools.quant.technical import kdj, bbi
-
-
-@dataclass
-class StrategySignal:
-    """Result of a strategy detection."""
-    action: str          # "buy", "sell", "hold", "warning"
-    confidence: float    # 0.0 - 1.0
-    reason: str         # Human-readable explanation
-    metadata: dict       # Additional details (e.g., J value, conditions met)
+from orchestration.models import StrategySignal
 
 
 class B1Strategy:

@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from typing import Literal
 import pandas as pd
 
-from personas.zettaranc.strategies.b1 import StrategySignal
+from orchestration.models import StrategySignal
 
 
 @dataclass
@@ -66,13 +66,13 @@ class ThreeWavesStrategy:
         # Pull wave
         short_gain = (close - close.shift(10)) / close.shift(10) * 100
         rapid_rise = short_gain >= 20
-        pull_wave = (~near_bottom) & rapid_rise & (cumulative_gain >= 20) & (cumulative_gain < 50)
+        pull_wave = (near_bottom.eq(False)) & rapid_rise & (cumulative_gain >= 20) & (cumulative_gain < 50)
 
         # Sprint wave
         sprint_wave = (cumulative_gain >= 50) & (short_gain >= 15)
 
         # One-wave flow
-        one_wave = (cumulative_gain >= 30) & (~high_volume_period) & (volume_ratio < 1.2)
+        one_wave = (cumulative_gain >= 30) & (high_volume_period.eq(False)) & (volume_ratio < 1.2)
 
         # Phase classification
         phase = "unknown"

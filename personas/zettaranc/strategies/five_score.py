@@ -28,15 +28,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from tools.quant.technical import kdj, bbi
-
-
-@dataclass
-class StrategySignal:
-    """Result of a strategy detection."""
-    action: str
-    confidence: float
-    reason: str
-    metadata: dict
+from orchestration.models import StrategySignal
 
 
 @dataclass
