@@ -34,21 +34,35 @@ class SyncEngine:
 
         return sorted(sources, key=lambda s: s.priority)
 
+    def _add_market_suffix(self, code: str) -> str:
+        """自动添加市场后缀：300/000/002 → .SZ, 600/601/688 → .SH"""
+        if '.' in code:
+            return code
+        code_num = str(code)[:3]
+        if code_num in ('300', '000', '002', '003', '301'):
+            return f"{code}.SZ"
+        elif code_num in ('600', '601', '603', '605', '688', '689'):
+            return f"{code}.SH"
+        return code
+
     def sync_stock_daily(self, code: str):
+        ts_code = self._add_market_suffix(code)
         last_date = self.db.get_last_trade_date(code, "daily_prices")
         if last_date:
-            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y%m%d")
+            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
-            start = "20180101"
-        end = datetime.now().strftime("%Y%m%d")
+            start = "2018-01-01"
+        end = datetime.now().strftime("%Y-%m-%d")
 
         if start > end:
             return 0
 
         for source in self.sources:
             try:
-                df = source.get_daily(code, start, end)
+                df = source.get_daily(ts_code, start, end)
                 if not df.empty:
+                    # 确保 code 列不带后缀（统一用原始代码）
+                    df["code"] = code
                     self.db.insert("daily_prices", df)
                     self.db.log_sync("daily_prices", code, source.name, start, end, len(df))
                     return len(df)
@@ -58,20 +72,22 @@ class SyncEngine:
         return 0
 
     def sync_stock_fund_flow(self, code: str):
+        ts_code = self._add_market_suffix(code)
         last_date = self.db.get_last_trade_date(code, "fund_flow")
         if last_date:
-            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y%m%d")
+            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
-            start = "20240101"
-        end = datetime.now().strftime("%Y%m%d")
+            start = "2024-01-01"
+        end = datetime.now().strftime("%Y-%m-%d")
 
         if start > end:
             return 0
 
         for source in self.sources:
             try:
-                df = source.get_fund_flow(code, start, end)
+                df = source.get_fund_flow(ts_code, start, end)
                 if not df.empty:
+                    df["code"] = code
                     self.db.insert("fund_flow", df)
                     self.db.log_sync("fund_flow", code, source.name, start, end, len(df))
                     return len(df)
@@ -81,18 +97,20 @@ class SyncEngine:
         return 0
 
     def sync_stock_daily_basic(self, code: str):
+        ts_code = self._add_market_suffix(code)
         last_date = self.db.get_last_trade_date(code, "daily_basic")
         if last_date:
-            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y%m%d")
+            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
-            start = "20180101"
-        end = datetime.now().strftime("%Y%m%d")
+            start = "2018-01-01"
+        end = datetime.now().strftime("%Y-%m-%d")
         if start > end:
             return 0
         for source in self.sources:
             try:
-                df = source.get_daily_basic(code, start, end)
+                df = source.get_daily_basic(ts_code, start, end)
                 if not df.empty:
+                    df["code"] = code
                     self.db.insert("daily_basic", df)
                     self.db.log_sync("daily_basic", code, source.name, start, end, len(df))
                     return len(df)
@@ -101,14 +119,14 @@ class SyncEngine:
                 continue
         return 0
 
-    def _sync_quarterly(self, code: str, table: str, method_name: str, default_start: str = "20180101"):
+    def _sync_quarterly(self, code: str, table: str, method_name: str, default_start: str = "2018-01-01"):
         """Sync quarterly financial data."""
         last_date = self.db.get_last_trade_date(code, table)
         if last_date:
-            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y%m%d")
+            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
             start = default_start
-        end = datetime.now().strftime("%Y%m%d")
+        end = datetime.now().strftime("%Y-%m-%d")
         if start > end:
             return 0
         for source in self.sources:
@@ -139,12 +157,13 @@ class SyncEngine:
         return self._sync_quarterly(code, "fina_indicator", "get_fina_indicator")
 
     def sync_stock_adj_factor(self, code: str):
+        ts_code = self._add_market_suffix(code)
         last_date = self.db.get_last_trade_date(code, "adj_factor")
         if last_date:
-            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y%m%d")
+            start = (datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
-            start = "20180101"
-        end = datetime.now().strftime("%Y%m%d")
+            start = "2018-01-01"
+        end = datetime.now().strftime("%Y-%m-%d")
         if start > end:
             return 0
         for source in self.sources:

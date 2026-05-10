@@ -37,11 +37,15 @@ __all__ = [
     "macd",
     "bollinger",
     "atr",
+    "double_line",
+    "brick_pattern",
+    "vol_ratio",
 ]
 
 
 def __getattr__(name: str):
-    if name in ["kdj", "rsi_3", "bbi", "stochastic", "macd", "bollinger", "atr"]:
+    if name in ["kdj", "rsi_3", "bbi", "stochastic", "macd", "bollinger", "atr",
+                "double_line", "brick_pattern", "vol_ratio"]:
         import importlib
         return importlib.import_module(f"tools.quant.technical.{name}")
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -58,4 +62,10 @@ QUERY_TOOLS = {
     "atr": ["atr"],
     "随机": ["stochastic"],
     "stochastic": ["stochastic"],
+    "双线": ["double_line"],
+    "白线": ["double_line"],
+    "黄线": ["double_line"],
+    "砖形": ["brick_pattern"],
+    "砖": ["brick_pattern"],
+    "量比": ["vol_ratio"],
 }

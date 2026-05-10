@@ -8,13 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `personas/fupeng/` — 付鹏宏观人格（`personality.md` + `SKILL.md` + `overrides.yaml`）
+- `personas/fupeng/strategies/` — 3 种付鹏宏观策略：
+  - `dumbbell.py` — 哑铃配置（防御端/进攻端/中间地带）
+  - `explosive_gold.py` — 爆金币预警（高确定性+低波动+杠杆堆积=闪崩前兆）
+  - `shrinking_circle.py` — 缩圈抱团检测（资金收缩抱团判断）
+- `personas/boss_mo/` — BOSS墨交易人格（`personality.md` + `SKILL.md` + `overrides.yaml`）
+- `personas/boss_mo/strategies/` — 2 种 BOSS墨交易策略：
+  - `rhythm.py` — 涨一段跌一段节奏检测（识别高低点→对比历史→判定涨跌阶段）
+  - `risk_reward.py` — 盈亏比计算（基于次高/前高/前低/脚位自动计算多空盈亏比）
+- `registry/wiki.yaml` — fupeng + boss_mo 个人知识库注册
+- `orchestration/engine.py` — 多 persona 策略适配层（`_adapt_fupeng_signal` + `_adapt_boss_mo_signal`），将自定义结果类型统一为 `StrategySignal`
 - `orchestration/conversation.py` — 多轮对话状态管理（ConversationState / ConversationManager）与诊断引擎（DiagnosisEngine）
 - `orchestration/response_generator.py` — LLM 融合生成，支持 5 家后端（DashScope / Anthropic / MiniMax / Kimi / Bailian）
 - `tests/test_orchestration/` — 34 个单元测试覆盖对话状态、响应生成、引擎诊断流程
 - `personas/persona_loader.py` — 运行时加载 `personality.md` + `overrides.yaml`
 
 ### Changed
-- `orchestration/engine.py` — 接入知识查询、LLM 生成、多轮对话状态，消除硬编码工具/策略映射
+- `orchestration/router.py` — 新增付鹏/BOSS墨关键词路由（宏观/大盘/经济→fupeng，黄金/原油/比特币/止损→boss_mo）
+- `orchestration/engine.py` — 接入知识查询、LLM 生成、多轮对话状态，消除硬编码工具/策略映射；新增多 persona 策略动态加载与信号适配
 - `quant/registry.py` — 改为 adapter 层，自动桥接 `tools/quant/technical/` 新架构与旧 API
 
 ### Removed

@@ -132,8 +132,11 @@ class Database:
             SELECT MAX({date_col}) as max_date FROM {table}
             WHERE code = ?
         """
-        result = self.conn.execute(sql, [code]).fetchone()
-        return result[0].strftime("%Y%m%d") if result and result[0] else None
+        try:
+            result = self.conn.execute(sql, [code]).fetchone()
+            return result[0].strftime("%Y%m%d") if result and result[0] else None
+        except Exception:
+            return None
 
     def check_data_gaps(self, code: str, table: str = "daily_prices") -> list[tuple[str, str]]:
         sql = f"""
@@ -254,6 +257,69 @@ class Database:
             INSERT INTO trades (trade_date, code, name, trade_type, shares, price, amount, fee, tax, total_cost, status, notes, persona_name)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)
         """, [trade_date, code, name or code, trade_type, shares, price, amount, fee, tax, total_cost, notes, persona_name])
+
+    # ------------------ Daily Indicators ------------------
+
+    def save_indicators(self, code: str, trade_date: str, indicators: dict, source: str = "local"):
+        """Save computed indicators for a single day."""
+        sql = """
+            INSERT OR REPLACE INTO daily_indicators
+            (code, trade_date, k, d, j, dif, dea, macd, bbi, rsi, atr, atr_pct,
+             boll_upper, boll_mid, boll_lower,
+             stoch_white, stoch_yellow, stoch_purple, stoch_red,
+             white_line, yellow_line,
+             brick_pattern, brick_count, vol_ratio, source, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+        """
+        self.conn.execute(sql, [
+            code,
+            trade_date,
+            indicators.get("k"),
+            indicators.get("d"),
+            indicators.get("j"),
+            indicators.get("dif"),
+            indicators.get("dea"),
+            indicators.get("macd"),
+            indicators.get("bbi"),
+            indicators.get("rsi"),
+            indicators.get("atr"),
+            indicators.get("atr_pct"),
+            indicators.get("boll_upper"),
+            indicators.get("boll_mid"),
+            indicators.get("boll_lower"),
+            indicators.get("stoch_white"),
+            indicators.get("stoch_yellow"),
+            indicators.get("stoch_purple"),
+            indicators.get("stoch_red"),
+            indicators.get("white_line"),
+            indicators.get("yellow_line"),
+            indicators.get("brick_pattern"),
+            indicators.get("brick_count"),
+            indicators.get("vol_ratio"),
+            source,
+        ])
+
+    def get_indicators(self, code: str, start: str | None = None, end: str | None = None,
+                       limit: int | None = None) -> pd.DataFrame:
+        """Get computed indicators for a stock."""
+        sql = """
+            SELECT * FROM daily_indicators
+            WHERE code = ?
+            {start_filter}
+            {end_filter}
+            ORDER BY trade_date
+            {limit_clause}
+        """.format(
+            start_filter="AND trade_date >= ?" if start else "",
+            end_filter="AND trade_date <= ?" if end else "",
+            limit_clause=f"LIMIT {limit}" if limit else "",
+        )
+        params = [code]
+        if start:
+            params.append(start)
+        if end:
+            params.append(end)
+        return self.conn.execute(sql, params).df()
 
     def close(self):
         self.conn.close()

@@ -1,4 +1,8 @@
-"""Download A-share and Hong Kong stock reports from cninfo.com.cn."""
+"""Download A-share and Hong Kong stock reports from cninfo.com.cn.
+
+PDF caching: reports are cached in data/financial_reports/{code}/ to avoid
+re-downloading. Cache is keyed by announcement ID and cleaned up by retention policy.
+"""
 
 import json
 import os
@@ -11,6 +15,15 @@ import httpx
 
 # Stock database location
 _STOCKS_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "stocks.json")
+
+# PDF cache location
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_PDF_CACHE_DIR = os.path.join(_PROJECT_ROOT, "data", "financial_reports")
+
+# Cache retention: keep last N years of reports per stock
+_CACHE_RETAIN_YEARS = 5
+# Cache retention: max PDF files per stock
+_CACHE_MAX_PDFS = 15
 
 
 def to_chinese_year(year: int) -> str:
@@ -159,8 +172,52 @@ class CnInfoDownloader:
             "isHLtitle": False,
         }
 
+    def _get_cache_dir(self, sec_code: str) -> str:
+        """Get cache directory for a stock's PDFs."""
+        cache_dir = os.path.join(_PDF_CACHE_DIR, sec_code)
+        os.makedirs(cache_dir, exist_ok=True)
+        return cache_dir
+
+    def _is_cached(self, filepath: str) -> bool:
+        """Check if PDF is already cached."""
+        return os.path.exists(filepath) and os.path.getsize(filepath) > 0
+
+    def _cleanup_cache(self, sec_code: str, current_year: int) -> None:
+        """Remove old PDFs beyond retention policy."""
+        cache_dir = self._get_cache_dir(sec_code)
+        if not os.path.exists(cache_dir):
+            return
+
+        pdfs = [f for f in os.listdir(cache_dir) if f.endswith(".pdf")]
+        if len(pdfs) <= _CACHE_MAX_PDFS:
+            return
+
+        # Sort by modification time (oldest first)
+        pdfs_with_mtime = []
+        for f in pdfs:
+            fp = os.path.join(cache_dir, f)
+            mtime = os.path.getmtime(fp)
+            pdfs_with_mtime.append((f, mtime))
+
+        pdfs_with_mtime.sort(key=lambda x: x[1])
+
+        # Remove oldest files until we're within limit
+        while len(pdfs_with_mtime) > _CACHE_MAX_PDFS:
+            old_file, _ = pdfs_with_mtime.pop(0)
+            old_path = os.path.join(cache_dir, old_file)
+            try:
+                os.remove(old_path)
+            except OSError:
+                pass
+
     def _download_pdf(self, announcement: dict, output_dir: str) -> Optional[str]:
-        """Download a single PDF file, returns file path."""
+        """Download a single PDF file, returns file path.
+
+        Caching strategy:
+        1. First check persistent cache at data/financial_reports/{code}/
+        2. If cached, copy to output_dir (for backward compatibility)
+        3. If not cached, download to both cache and output_dir
+        """
         client = httpx.Client(
             headers=self.headers, cookies=self.cookies, timeout=self.timeout
         )
@@ -177,20 +234,42 @@ class CnInfoDownloader:
         filename = f"{sec_code}_{sec_name}_{title}_{announcement_id}.pdf"
         # Clean filename
         filename = "".join(c for c in filename if c.isalnum() or c in "._-")
-        filepath = os.path.join(output_dir, filename)
 
-        if not os.path.exists(filepath):
-            try:
-                print(f"Downloading: {title}")
-                resp = client.get(f"http://static.cninfo.com.cn/{adjunct_url}")
-                with open(filepath, "wb") as f:
-                    f.write(resp.content)
-                time.sleep(random.uniform(0.5, 1.5))  # Rate limiting
-            except Exception as e:
-                print(f"Download failed: {e}", file=sys.stderr)
-                return None
+        # Cache path (persistent)
+        cache_dir = self._get_cache_dir(sec_code)
+        cache_path = os.path.join(cache_dir, filename)
 
-        return filepath
+        # Output path (for backward compatibility with existing code)
+        output_path = os.path.join(output_dir, filename)
+
+        # Check cache first
+        if self._is_cached(cache_path):
+            # Copy from cache to output_dir if needed
+            if not os.path.exists(output_path):
+                try:
+                    import shutil
+                    shutil.copy2(cache_path, output_path)
+                except Exception:
+                    pass
+            return output_path
+
+        # Download to cache location
+        try:
+            print(f"Downloading: {title}")
+            resp = client.get(f"http://static.cninfo.com.cn/{adjunct_url}")
+            # Write to cache first
+            with open(cache_path, "wb") as f:
+                f.write(resp.content)
+            # Also write to output_dir
+            if cache_path != output_path:
+                import shutil
+                shutil.copy2(cache_path, output_path)
+            time.sleep(random.uniform(0.5, 1.5))  # Rate limiting
+        except Exception as e:
+            print(f"Download failed: {e}", file=sys.stderr)
+            return None
+
+        return output_path
 
     def _is_main_annual_report(self, title: str, year: int, market: str = "szse") -> bool:
         """Check if this is the main annual report (not summary/English)."""
@@ -315,10 +394,22 @@ class CnInfoDownloader:
 
             for ann in announcements:
                 if self._is_main_annual_report(ann["announcementTitle"], year, market):
+                    # Check if already cached before calling _download_pdf
+                    announcement_id = ann["announcementId"]
+                    sec_code = ann["secCode"]
+                    sec_name = ann["secName"].replace("*", "s").replace("/", "-")
+                    title = ann["announcementTitle"].replace("/", "-").replace("\\", "-")
+                    cached_filename = f"{sec_code}_{sec_name}_{title}_{announcement_id}.pdf"
+                    cached_filename = "".join(c for c in cached_filename if c.isalnum() or c in "._-")
+                    was_cached = self._is_cached(os.path.join(self._get_cache_dir(sec_code), cached_filename))
+
                     filepath = self._download_pdf(ann, output_dir)
                     if filepath:
                         downloaded.append(filepath)
-                        print(f"Downloaded: {year} Annual Report")
+                        if not was_cached:
+                            print(f"Downloaded: {year} Annual Report")
+                        else:
+                            print(f"Cache hit: {year} Annual Report")
                     break  # Only get one per year
 
         return downloaded
@@ -373,10 +464,25 @@ class CnInfoDownloader:
 
             for ann in announcements:
                 if self._is_main_periodic_report(ann["announcementTitle"], report_type):
+                    # Check if already cached
+                    announcement_id = ann["announcementId"]
+                    sec_code = ann["secCode"]
+                    sec_name = ann["secName"].replace("*", "s").replace("/", "-")
+                    title = ann["announcementTitle"].replace("/", "-").replace("\\", "-")
+                    cached_filename = f"{sec_code}_{sec_name}_{title}_{announcement_id}.pdf"
+                    cached_filename = "".join(c for c in cached_filename if c.isalnum() or c in "._-")
+                    was_cached = self._is_cached(os.path.join(self._get_cache_dir(sec_code), cached_filename))
+
                     filepath = self._download_pdf(ann, output_dir)
                     if filepath:
                         downloaded.append(filepath)
-                        print(f"Downloaded: {year} {search_term}")
+                        if not was_cached:
+                            print(f"Downloaded: {year} {search_term}")
+                        else:
+                            print(f"Cache hit: {year} {search_term}")
                     break
+
+        # Cleanup old PDFs beyond retention policy
+        self._cleanup_cache(stock_code, year)
 
         return downloaded

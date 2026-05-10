@@ -44,6 +44,7 @@ class GenerationContext:
     strategy_results: dict = None
     aggregated_signal: Any = None
     stock_code: Optional[str] = None
+    web_search_results: Optional[str] = None
 
 
 class ResponseGenerator:
@@ -567,6 +568,9 @@ class ResponseGenerator:
             if strategy_summary:
                 context_parts.append(f"【策略信号】\n{strategy_summary}")
 
+        if context.web_search_results:
+            context_parts.append(f"【实时信息】\n{context.web_search_results}")
+
         if context.aggregated_signal:
             sig = context.aggregated_signal
             context_parts.append(f"【综合判断】{sig.action} (置信度: {sig.confidence:.0%})")
@@ -657,14 +661,45 @@ class ResponseGenerator:
         return "\n".join(lines)
 
     def _summarize_strategies(self, strategy_results: dict) -> str:
-        """Summarize strategy results for LLM context."""
+        """Summarize strategy results for LLM context.
+
+        Includes metadata details (key price levels, phase progress, etc.)
+        when available, so the LLM has rich quantitative context.
+        """
         lines = []
         for name, signal in strategy_results.items():
             if signal.action != "hold":
-                lines.append(f"{name}: {signal.action} (置信度 {signal.confidence:.0%}) - {signal.reason}")
+                line = f"{name}: {signal.action} (置信度 {signal.confidence:.0%}) - {signal.reason}"
+                # Append metadata details for richer context
+                meta = getattr(signal, "metadata", None)
+                if meta:
+                    details = signal.metadata.get("details", {})
+                    if details:
+                        detail_str = self._format_details(details)
+                        if detail_str:
+                            line += f"\n  [{detail_str}]"
+                lines.append(line)
         if not lines:
             lines.append("暂无明确策略信号")
         return "\n".join(lines)
+
+    def _format_details(self, details: dict) -> str:
+        """Format strategy metadata details for LLM context."""
+        parts = []
+        for key, val in details.items():
+            if key in ("swings",):
+                continue  # Skip raw complex structures
+            if isinstance(val, dict):
+                # e.g. {"price": 122.5, "type": "次高"}
+                clean = {k: round(v, 2) if isinstance(v, float) else v for k, v in val.items()}
+                parts.append(f"{key}={clean}")
+            elif isinstance(val, float):
+                parts.append(f"{key}={val:.2f}")
+            elif isinstance(val, bool):
+                pass  # Skip booleans for brevity
+            else:
+                parts.append(f"{key}={val}")
+        return "; ".join(parts)
 
     # ------------------------------------------------------------------ #
     #  Template fallback (no LLM)

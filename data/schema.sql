@@ -252,3 +252,34 @@ CREATE TABLE IF NOT EXISTS sync_log (
     error_msg VARCHAR(500),
     synced_at TIMESTAMP DEFAULT now()
 );
+
+-- daily_indicators: computed technical indicators (multi-day trend traceable)
+CREATE TABLE IF NOT EXISTS daily_indicators (
+    code VARCHAR(20),
+    trade_date DATE,
+    k DECIMAL(8,4),
+    d DECIMAL(8,4),
+    j DECIMAL(8,4),
+    dif DECIMAL(12,4),
+    dea DECIMAL(12,4),
+    macd DECIMAL(12,4),
+    bbi DECIMAL(12,4),
+    rsi DECIMAL(8,4),
+    atr DECIMAL(12,4),
+    atr_pct DECIMAL(8,4),
+    boll_upper DECIMAL(12,4),
+    boll_mid DECIMAL(12,4),
+    boll_lower DECIMAL(12,4),
+    stoch_white DECIMAL(8,4),
+    stoch_yellow DECIMAL(8,4),
+    stoch_purple DECIMAL(8,4),
+    stoch_red DECIMAL(8,4),
+    white_line DECIMAL(12,4),
+    yellow_line DECIMAL(12,4),
+    brick_pattern VARCHAR(10),
+    brick_count INTEGER,
+    vol_ratio DECIMAL(8,4),
+    source VARCHAR(50),
+    created_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (code, trade_date)
+);

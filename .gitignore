@@ -27,9 +27,12 @@ wheels/
 
 # Data & Cache
 data/cache/
+data/financial_reports/
 knowledge/vector_store/
 knowledge/.sync_state.json
 *.db
+*.duckdb
+*.duckdb.wal
 *.sqlite
 *.sqlite3
 

@@ -19,6 +19,14 @@ wiki:
       path: "/home/chenlei/001_AI/knowledge_base/zettaranc-knowledge/wiki"
       enabled: true
       description: "Zettaranc 个人 wiki"
+    fupeng:
+      path: "/home/chenlei/001_AI/knowledge_base/fupeng-knowledge/wiki"
+      enabled: true
+      description: "付鹏 个人 wiki"
+    boss_mo:
+      path: "/home/chenlei/001_AI/knowledge_base/mo_knowledge/wiki"
+      enabled: true
+      description: "BOSS墨 个人 wiki"
 
   # Default max results per query
   defaults:

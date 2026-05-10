@@ -1,0 +1,68 @@
+# WebSearch Provider 配置注册表
+# 支持 HTTP 类型的搜索 provider，Engine 按列表顺序尝试，第一个失败自动 fallback
+#
+# 推荐 Provider：
+# - Serper (Google 搜索代理): https://serper.dev ，免费额度 2500 次
+# - SerpApi (Google/Bing 搜索): https://serpapi.com ，免费 100 次/月
+# - Bing Web Search API: https://www.microsoft.com/en-us/bing/apis/bing-web-search-api
+
+providers:
+  minimax:
+    type: "http"
+    url: "https://api.minimaxi.com/v1/coding_plan/search"
+    method: "POST"
+    headers:
+      Authorization: "Bearer ${MINIMAX_API_KEY}"
+      Content-Type: "application/json"
+    body:
+      q: "{query}"
+    response_path: "organic"
+    timeout: 10
+    # 降级：未配置 MINIMAX_API_KEY 时自动跳过此 provider
+
+  # 以下为 HTTP 类型的 provider 示例（取消注释即可使用）：
+  # serper:
+  #   type: "http"
+  #   url: "https://google.serper.dev/search"
+  #   method: "POST"
+  #   headers:
+  #     Content-Type: "application/json"
+  #     X-API-KEY: "${SERPER_API_KEY}"
+  #   body:
+  #     q: "{query}"
+  #     gl: "cn"
+  #     hl: "zh-cn"
+  #   response_path: "organic"
+  #   timeout: 10
+
+  # 示例：SerpApi（支持 Google/Bing 等）
+  # serpapi:
+  #   type: "http"
+  #   url: "https://serpapi.com/search.json"
+  #   method: "GET"
+  #   params:
+  #     q: "{query}"
+  #     api_key: "${SERPAPI_KEY}"
+  #     hl: "zh-cn"
+  #     gl: "cn"
+  #   response_path: "organic_results"
+  #   timeout: 10
+
+  # 示例：Bing Web Search API
+  # bing:
+  #   type: "http"
+  #   url: "https://api.bing.microsoft.com/v7.0/search"
+  #   method: "GET"
+  #   params:
+  #     q: "{query}"
+  #     count: "10"
+  #     mkt: "zh-CN"
+  #   headers:
+  #     Ocp-Apim-Subscription-Key: "${BING_SEARCH_KEY}"
+  #   response_path: "webPages.value"
+  #   timeout: 10
+
+# 默认配置
+defaults:
+  max_results: 5
+  timeout: 10

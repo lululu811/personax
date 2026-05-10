@@ -32,7 +32,11 @@ class Router:
         "量": "zettaranc",
         "估值": "munger",
         "利润": "munger",
-        "宏观": "boss_mo",
+        "宏观": "fupeng",
+        "大盘": "fupeng",
+        "经济": "fupeng",
+        "付鹏": "fupeng",
+        "老付": "fupeng",
         "财报": "financial_analyst",
         "年报": "financial_analyst",
         "财务": "financial_analyst",
@@ -41,9 +45,21 @@ class Router:
         "毛利率": "financial_analyst",
         "营收": "financial_analyst",
         "净利润": "financial_analyst",
-        "政策": "boss_mo",
-        "利率": "boss_mo",
-        "GDP": "boss_mo",
+        "政策": "fupeng",
+        "利率": "fupeng",
+        "GDP": "fupeng",
+        "BOSS墨": "boss_mo",
+        "boss_mo": "boss_mo",
+        "boss墨": "boss_mo",
+        "黄金": "boss_mo",
+        "原油": "boss_mo",
+        "比特币": "boss_mo",
+        "止损": "boss_mo",
+        "盈亏比": "boss_mo",
+        "点位": "boss_mo",
+        "次高": "boss_mo",
+        "分水": "boss_mo",
+        "操作": "boss_mo",
     }
 
     # Intent keywords
@@ -106,8 +122,8 @@ class Router:
         # Check for multi-persona keywords
         if any(k in query for k in ["估值", "基本面"]) and "munger" in personas:
             secondary.append("munger")
-        if any(k in query for k in ["宏观", "政策"]) and "boss_mo" in personas:
-            secondary.append("boss_mo")
+        if any(k in query for k in ["宏观", "政策"]) and "fupeng" in personas:
+            secondary.append("fupeng")
 
         # If asking for comparison, involve both
         if "对比" in query or "比较" in query:

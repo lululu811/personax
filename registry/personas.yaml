@@ -16,3 +16,35 @@ personas:
     quant_overrides:
       default_indicators: ["MA", "MACD", "RSI"]
       default_backtest_period: 252
+  fupeng:
+    name: "付鹏"
+    display_name: "老付"
+    base_template: "macro_strategist"
+    description: "东北证券首席经济学家，宏观研究与交易分析框架"
+    knowledge_bases:
+      - fupeng
+      - common
+    data_sources:
+      - tushare
+    features:
+      quant_enabled: false
+      multi_turn_diagnosis: false
+      web_search: true
+      web_search_providers: ["minimax"]
+      web_search_context: "macro"
+  boss_mo:
+    name: "BOSS墨"
+    display_name: "BOSS墨"
+    base_template: "trader"
+    description: "主做黄金/原油/比特币/大盘的技术派交易者，涨一段跌一段/点位大于方向/次高与分水"
+    knowledge_bases:
+      - boss_mo
+      - common
+    data_sources:
+      - tushare
+    features:
+      quant_enabled: false
+      multi_turn_diagnosis: false
+      web_search: true
+      web_search_providers: ["minimax"]
+      web_search_context: "market_price"

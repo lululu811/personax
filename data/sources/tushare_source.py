@@ -178,12 +178,16 @@ class TushareSource(DataSource):
                 df[date_col] = pd.to_datetime(df[date_col], format="%Y%m%d", errors="coerce").dt.strftime("%Y-%m-%d")
         return df[list(col_map.values()) + ["source"]]
 
+    def _normalize_date(self, date_str: str) -> str:
+        return date_str.replace("-", "") if "-" in date_str else date_str
+
     def get_daily(self, code: str, start: str, end: str) -> pd.DataFrame:
+        df = self.pro.daily(ts_code=code, start_date=self._normalize_date(start), end_date=self._normalize_date(end))
         df = self.pro.daily(ts_code=code, start_date=start, end_date=end)
         return self._standardize(df, _DAILY_COLS, "tushare")
 
     def get_fund_flow(self, code: str, start: str, end: str) -> pd.DataFrame:
-        df = self.pro.moneyflow(ts_code=code, start_date=start, end_date=end)
+        df = self.pro.moneyflow(ts_code=code, start_date=self._normalize_date(start), end_date=self._normalize_date(end))
         return self._standardize(df, _FUND_FLOW_COLS, "tushare")
 
     def get_stocks(self) -> pd.DataFrame:
@@ -200,25 +204,25 @@ class TushareSource(DataSource):
         return df[["code", "name", "industry", "market", "list_date", "is_active", "source"]]
 
     def get_daily_basic(self, code: str, start: str, end: str) -> pd.DataFrame:
-        df = self.pro.daily_basic(ts_code=code, start_date=start, end_date=end)
+        df = self.pro.daily_basic(ts_code=code, start_date=self._normalize_date(start), end_date=self._normalize_date(end))
         return self._standardize(df, _DAILY_BASIC_COLS, "tushare")
 
     def get_income(self, code: str, start: str, end: str) -> pd.DataFrame:
-        df = self.pro.income(ts_code=code, start_date=start, end_date=end)
+        df = self.pro.income(ts_code=code, start_date=self._normalize_date(start), end_date=self._normalize_date(end))
         return self._standardize(df, _INCOME_COLS, "tushare")
 
     def get_balancesheet(self, code: str, start: str, end: str) -> pd.DataFrame:
-        df = self.pro.balancesheet(ts_code=code, start_date=start, end_date=end)
+        df = self.pro.balancesheet(ts_code=code, start_date=self._normalize_date(start), end_date=self._normalize_date(end))
         return self._standardize(df, _BALANCESHEET_COLS, "tushare")
 
     def get_cashflow(self, code: str, start: str, end: str) -> pd.DataFrame:
-        df = self.pro.cashflow(ts_code=code, start_date=start, end_date=end)
+        df = self.pro.cashflow(ts_code=code, start_date=self._normalize_date(start), end_date=self._normalize_date(end))
         return self._standardize(df, _CASHFLOW_COLS, "tushare")
 
     def get_fina_indicator(self, code: str, start: str, end: str) -> pd.DataFrame:
-        df = self.pro.fina_indicator(ts_code=code, start_date=start, end_date=end)
+        df = self.pro.fina_indicator(ts_code=code, start_date=self._normalize_date(start), end_date=self._normalize_date(end))
         return self._standardize(df, _FINA_INDICATOR_COLS, "tushare")
 
     def get_adj_factor(self, code: str, start: str, end: str) -> pd.DataFrame:
-        df = self.pro.adj_factor(ts_code=code, start_date=start, end_date=end)
+        df = self.pro.adj_factor(ts_code=code, start_date=self._normalize_date(start), end_date=self._normalize_date(end))
         return self._standardize(df, _ADJ_FACTOR_COLS, "tushare")

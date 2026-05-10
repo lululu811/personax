@@ -16,6 +16,7 @@ from orchestration.signal_aggregator import (
 from orchestration.response_generator import ResponseGenerator, GenerationContext
 from orchestration.conversation import ConversationManager, ConversationState, DiagnosisEngine
 from personas.persona_loader import load_persona
+from shared.config import get_persona_config
 from tools.quant.technical import QUERY_TOOLS as _DEFAULT_QUERY_TOOLS
 from tools.quant.technical.interface import get_tool as _get_tool
 from tools.quant.technical.interface import list_tools as _list_tools
@@ -165,6 +166,26 @@ class OrchestrationEngine:
                 # Wiki query is optional; don't fail the whole request
                 pass
 
+        # Step 2b: WebSearch (if persona has web_search enabled)
+        web_search_results = ""
+        try:
+            persona_config_raw = get_persona_config(route.primary)
+            features = persona_config_raw.get("features", {})
+            if features.get("web_search", False):
+                providers = features.get("web_search_providers", [])
+                context = features.get("web_search_context", "")
+                from orchestration.web_search_tool import get_web_search_tool
+                ws_tool = get_web_search_tool()
+                if ws_tool.is_available(providers):
+                    web_search_results = ws_tool.search(
+                        query=request.query,
+                        providers=providers,
+                        context=context,
+                    )
+        except Exception:
+            # WebSearch is optional; don't fail the whole request
+            pass
+
         # Step 3: Determine required tools and strategies
         tools_needed = self._get_tools_for_query(request.query)
         primary_persona = route.primary if 'route' in dir() else (request.persona_priority or ["zettaranc"])[0]
@@ -189,17 +210,17 @@ class OrchestrationEngine:
         strategy_results = {}
         if request.df is not None:
             for strategy_name in strategies_needed:
-                strategy_signal = self._run_strategy(strategy_name, request.df, tool_results)
+                strategy_signal = self._run_strategy(strategy_name, request.df, tool_results, persona=primary_persona)
                 strategy_results[strategy_name] = strategy_signal
 
         # Step 5: Build persona signals for aggregation
         persona_signals = []
-        if request.persona_priority and "zettaranc" in request.persona_priority:
-            # Convert strategy results to PersonaSignal
+        # Convert strategy results to PersonaSignal for any persona
+        for persona_name in (request.persona_priority or []):
             for name, signal in strategy_results.items():
                 if signal.action != "hold":
                     persona_signals.append(PersonaSignal(
-                        persona="zettaranc",
+                        persona=persona_name,
                         action=signal.action,
                         confidence=signal.confidence,
                         reason=signal.reason,
@@ -226,6 +247,7 @@ class OrchestrationEngine:
                     strategy_results=strategy_results,
                     aggregated_signal=aggregated,
                     stock_code=request.stock_code,
+                    web_search_results=web_search_results if web_search_results else None,
                 ),
                 attachments=request.attachments,
             )
@@ -288,11 +310,22 @@ class OrchestrationEngine:
 
     def _load_strategy_keywords(self, persona: str) -> dict:
         """Load keyword -> strategy mapping for a given persona."""
-        # TODO: generalize for multiple personas; currently zettaranc is the reference
         if persona == "zettaranc":
             try:
                 from personas.zettaranc.strategies import QUERY_STRATEGIES
                 return QUERY_STRATEGIES
+            except Exception:
+                pass
+        elif persona == "fupeng":
+            try:
+                from personas.fupeng.strategies import QUERY_STRATEGIES as FP_QUERY
+                return FP_QUERY
+            except Exception:
+                pass
+        elif persona == "boss_mo":
+            try:
+                from personas.boss_mo.strategies import QUERY_STRATEGIES as MO_QUERY
+                return MO_QUERY
             except Exception:
                 pass
         return {}
@@ -308,16 +341,187 @@ class OrchestrationEngine:
         tool_instance = tool_cls()
         return tool_instance.compute(df)
 
-    def _run_strategy(self, strategy_name: str, df: pd.DataFrame, tool_results: dict):
+    def _run_strategy(self, strategy_name: str, df: pd.DataFrame, tool_results: dict, persona: str = "zettaranc"):
         """Run a strategy and return the signal via registry."""
-        from personas.zettaranc.strategies import get_strategy
-
         # Use cached instance if available
         if strategy_name not in self._strategy_cache:
+            if persona == "fupeng":
+                from personas.fupeng.strategies import get_strategy
+            elif persona == "boss_mo":
+                from personas.boss_mo.strategies import get_strategy
+            else:
+                from personas.zettaranc.strategies import get_strategy
             self._strategy_cache[strategy_name] = get_strategy(strategy_name)
 
         strategy = self._strategy_cache[strategy_name]
-        return strategy.detect(df)
+        raw_result = strategy.detect(df)
+
+        # Adapt fupeng strategy results to StrategySignal format
+        if persona == "fupeng":
+            from personas.zettaranc.strategies.b1 import StrategySignal
+            return self._adapt_fupeng_signal(strategy_name, raw_result)
+
+        # Adapt boss_mo strategy results to StrategySignal format
+        if persona == "boss_mo":
+            from personas.zettaranc.strategies.b1 import StrategySignal
+            return self._adapt_boss_mo_signal(strategy_name, raw_result)
+
+        return raw_result
+
+    def _adapt_fupeng_signal(self, strategy_name: str, raw_result):
+        """Convert fupeng strategy result to StrategySignal format.
+
+        Fupeng strategies return custom result types (DumbbellResult,
+        ExplosiveGoldResult, ShrinkingCircleResult) that the downstream
+        _build_analysis and _summarize_strategies can't consume directly.
+        """
+        from personas.zettaranc.strategies.b1 import StrategySignal
+
+        if strategy_name == "dumbbell":
+            if raw_result.position == "defensive":
+                action = "hold"
+                confidence = raw_result.score
+                reason = raw_result.reason
+            elif raw_result.position == "offensive":
+                action = "buy"
+                confidence = raw_result.score * 0.7
+                reason = raw_result.reason
+            else:
+                action = "warning"
+                confidence = 0.5
+                reason = raw_result.reason
+            return StrategySignal(
+                action=action, confidence=confidence, reason=reason,
+                metadata={"position": raw_result.position, "details": raw_result.details},
+            )
+
+        elif strategy_name == "explosive_gold":
+            if raw_result.risk_level == "high":
+                return StrategySignal(
+                    action="warning", confidence=raw_result.score,
+                    reason=raw_result.reason,
+                    metadata={"risk_level": raw_result.risk_level, "details": raw_result.details},
+                )
+            elif raw_result.risk_level == "medium":
+                return StrategySignal(
+                    action="hold", confidence=raw_result.score * 0.5,
+                    reason=raw_result.reason,
+                    metadata={"risk_level": raw_result.risk_level, "details": raw_result.details},
+                )
+            else:
+                return StrategySignal(
+                    action="hold", confidence=0.0, reason=raw_result.reason,
+                    metadata={"risk_level": raw_result.risk_level, "details": raw_result.details},
+                )
+
+        elif strategy_name == "shrinking_circle":
+            if raw_result.phase == "final_circle":
+                return StrategySignal(
+                    action="warning", confidence=raw_result.score,
+                    reason=raw_result.reason,
+                    metadata={"phase": raw_result.phase, "details": raw_result.details},
+                )
+            elif raw_result.phase == "shrinking":
+                return StrategySignal(
+                    action="hold", confidence=raw_result.score * 0.6,
+                    reason=raw_result.reason,
+                    metadata={"phase": raw_result.phase, "details": raw_result.details},
+                )
+            else:
+                return StrategySignal(
+                    action="hold", confidence=0.0, reason=raw_result.reason,
+                    metadata={"phase": raw_result.phase, "details": raw_result.details},
+                )
+
+        # Fallback for unknown fupeng strategies
+        return StrategySignal(
+            action="hold", confidence=0.0, reason=str(raw_result), metadata={}
+        )
+
+    def _adapt_boss_mo_signal(self, strategy_name: str, raw_result):
+        """Convert boss_mo strategy result to StrategySignal format."""
+        from personas.zettaranc.strategies.b1 import StrategySignal
+
+        if strategy_name == "rhythm":
+            if raw_result.phase in ("rising_late", "falling_late"):
+                return StrategySignal(
+                    action="warning", confidence=raw_result.score,
+                    reason=raw_result.reason,
+                    metadata={"phase": raw_result.phase, "details": raw_result.details},
+                )
+            elif raw_result.phase in ("rising_early", "rising_mid"):
+                return StrategySignal(
+                    action="hold", confidence=raw_result.score * 0.5,
+                    reason=raw_result.reason,
+                    metadata={"phase": raw_result.phase, "details": raw_result.details},
+                )
+            elif raw_result.phase in ("falling_early", "falling_mid"):
+                return StrategySignal(
+                    action="hold", confidence=raw_result.score * 0.4,
+                    reason=raw_result.reason,
+                    metadata={"phase": raw_result.phase, "details": raw_result.details},
+                )
+            else:
+                return StrategySignal(
+                    action="hold", confidence=0.3,
+                    reason=raw_result.reason,
+                    metadata={"phase": raw_result.phase, "details": raw_result.details},
+                )
+
+        elif strategy_name == "risk_reward":
+            if raw_result.recommendation == "long":
+                return StrategySignal(
+                    action="buy",
+                    confidence=min(raw_result.long_ratio / 4, 1.0),
+                    reason=raw_result.reason,
+                    metadata={"recommendation": raw_result.recommendation,
+                              "details": raw_result.details},
+                )
+            elif raw_result.recommendation == "short":
+                return StrategySignal(
+                    action="warning",
+                    confidence=min(raw_result.short_ratio / 4, 1.0),
+                    reason=raw_result.reason,
+                    metadata={"recommendation": raw_result.recommendation,
+                              "details": raw_result.details},
+                )
+            elif raw_result.recommendation == "wait":
+                return StrategySignal(
+                    action="hold", confidence=0.0,
+                    reason=raw_result.reason,
+                    metadata={"recommendation": raw_result.recommendation,
+                              "details": raw_result.details},
+                )
+            else:
+                return StrategySignal(
+                    action="hold", confidence=0.0,
+                    reason=raw_result.reason,
+                    metadata={"recommendation": raw_result.recommendation,
+                              "details": raw_result.details},
+                )
+
+        elif strategy_name == "secondary_high":
+            if raw_result.signal in ("near_secondary_high", "near_support"):
+                action = "warning" if raw_result.signal == "near_secondary_high" else "buy"
+                return StrategySignal(
+                    action=action,
+                    confidence=raw_result.score,
+                    reason=raw_result.reason,
+                    metadata={"signal": raw_result.signal,
+                              "details": raw_result.details},
+                )
+            else:
+                return StrategySignal(
+                    action="hold", confidence=raw_result.score,
+                    reason=raw_result.reason,
+                    metadata={"signal": raw_result.signal,
+                              "details": raw_result.details},
+                )
+
+        # Fallback for unknown boss_mo strategies
+        return StrategySignal(
+            action="hold", confidence=0.0, reason=str(raw_result), metadata={}
+        )
 
     def _build_analysis(
         self,
@@ -421,7 +625,7 @@ class OrchestrationEngine:
         route = self.router.route(request.query, personas)
 
         tools_needed = self._get_tools_for_query(request.query)
-        strategies_needed = self._get_strategies_for_query(request.query)
+        strategies_needed = self._get_strategies_for_query(request.query, persona=route.primary)
 
         tool_results = {}
         strategy_results = {}
@@ -437,7 +641,7 @@ class OrchestrationEngine:
                     self.tool_cache.set(tool_name, df_hash, result)
 
             for strategy_name in strategies_needed:
-                signal = self._run_strategy(strategy_name, request.df, tool_results)
+                signal = self._run_strategy(strategy_name, request.df, tool_results, persona=route.primary)
                 strategy_results[strategy_name] = signal
 
         # Knowledge query
@@ -558,7 +762,7 @@ class OrchestrationEngine:
         route = self.router.route(request.query, personas)
 
         tools_needed = self._get_tools_for_query(request.query)
-        strategies_needed = self._get_strategies_for_query(request.query)
+        strategies_needed = self._get_strategies_for_query(request.query, persona=route.primary)
 
         tool_results = {}
         strategy_results = {}
@@ -574,16 +778,16 @@ class OrchestrationEngine:
                     self.tool_cache.set(tool_name, df_hash, result)
 
             for strategy_name in strategies_needed:
-                signal = self._run_strategy(strategy_name, request.df, tool_results)
+                signal = self._run_strategy(strategy_name, request.df, tool_results, persona=route.primary)
                 strategy_results[strategy_name] = signal
 
         # Aggregate signals
         persona_signals = []
-        if request.persona_priority and "zettaranc" in request.persona_priority:
+        for persona_name in (request.persona_priority or []):
             for name, signal in strategy_results.items():
                 if signal.action != "hold":
                     persona_signals.append(PersonaSignal(
-                        persona="zettaranc",
+                        persona=persona_name,
                         action=signal.action,
                         confidence=signal.confidence,
                         reason=signal.reason,
