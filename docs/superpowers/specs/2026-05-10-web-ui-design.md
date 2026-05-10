@@ -397,6 +397,87 @@ websockets>=12.0
 
 ---
 
+## 11. 扩展性设计
+
+### 11.1 已具备的扩展能力
+
+| 扩展场景 | 操作 | 前端改动 | 后端改动 |
+|---------|------|---------|---------|
+| 新增 persona | `personas/` 目录 + `personas.yaml` | 0（自动发现） | 0（自动注册） |
+| 新增技术指标 | `@register_tool` 装饰器 | 0（`/api/tools` 拉取） | 0（自动注册） |
+| 新增页面 | Nuxt 文件路由 | 加 `.vue` 文件 | 加 `router.py` |
+| 新增后端接口 | FastAPI router 模块化 | 调用新接口 | 加 `api/xxx/router.py` |
+| 新增数据源 | `data_sources.yaml` + `DataSource` 子类 | 0 | 0 |
+
+### 11.2 数据库迁移路径
+
+当前使用 SQLite 存储用户数据，单机部署足够。为支持未来扩展：
+
+- **ORM 抽象**：`api/db/database.py` 使用 SQLAlchemy Core（非 ORM），后续从 SQLite 迁移到 PostgreSQL 只需改连接字符串
+- **迁移工具**：使用 Alembic 管理 schema 迁移，确保版本化
+- **触发条件**：并发写入 >100/s 或需要多实例部署时，迁移到 PostgreSQL
+
+```python
+# api/db/database.py — 可切换的数据库后端
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
+
+# 当前：SQLite
+DATABASE_URL = "sqlite+aiosqlite:///./data/personax.db"
+
+# 未来迁移到 PostgreSQL：
+# DATABASE_URL = "postgresql+asyncpg://user:pass@localhost/personax"
+```
+
+### 11.3 API 版本化
+
+所有 API 路径使用版本前缀，避免后续 breaking change：
+
+```
+/api/v1/chat          # 当前版本
+/api/v2/chat          # 未来版本（如需要）
+```
+
+FastAPI router 组织方式：
+
+```python
+# api/main.py
+from api.v1 import router as v1_router
+app.include_router(v1_router, prefix="/api/v1")
+```
+
+### 11.4 人格动态化（后续扩展）
+
+当前人格为静态配置文件。如需支持"用户自定义人格"：
+
+- **前端**：增加人格编辑器页面（`/personas/create`），表单化 personality.md 的各字段
+- **后端**：增加 `/api/v1/personas` CRUD 接口，支持用户创建/编辑/删除自定义人格
+- **存储**：自定义人格存入 SQLite `custom_personas` 表，启动时与静态人格合并
+- **优先级**：用户自定义 > 静态配置
+
+```sql
+CREATE TABLE custom_personas (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    name VARCHAR(50) NOT NULL,
+    display_name VARCHAR(100),
+    personality_md TEXT,
+    overrides_yaml TEXT,
+    is_public BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 11.5 插件系统（远期）
+
+如需支持第三方扩展 UI 组件：
+
+- Nuxt 3 支持模块系统（`nuxt-modules`），可作为插件载体
+- 后端可通过 FastAPI 的 `APIRouter` 动态挂载
+- 前端可通过 Vue 的 `defineAsyncComponent` 懒加载插件组件
+
+---
+
 ## 附录：Mockup 截图
 
 设计过程中的视觉 mockup 保存在 `.superpowers/brainstorm/` 目录中。
