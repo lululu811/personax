@@ -1,0 +1,149 @@
+<h2>主页面布局</h2>
+<p class="subtitle">PersonaX Web UI 的核心交互区域设计</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>左侧对话 + 右侧数据面板</h3>
+      <div class="mockup">
+        <div class="mockup-header">布局 A：对话驱动</div>
+        <div class="mockup-body" style="padding: 0; height: 320px; display: flex;">
+          <!-- Left sidebar -->
+          <div style="width: 200px; background: #1e293b; color: #94a3b8; padding: 12px; font-size: 12px; border-right: 1px solid #334155;">
+            <div style="font-weight: 600; color: white; margin-bottom: 12px;">PersonaX</div>
+            <div style="padding: 6px 8px; background: #334155; border-radius: 6px; margin-bottom: 4px; color: white;">💬 新对话</div>
+            <div style="padding: 6px 8px; margin-bottom: 4px;">📊 茅台分析</div>
+            <div style="padding: 6px 8px; margin-bottom: 4px;">📈 宁德时代 B1</div>
+            <div style="padding: 6px 8px; margin-bottom: 16px;">🔍 财报排雷</div>
+            <div style="font-size: 11px; color: #64748b; border-top: 1px solid #334155; padding-top: 8px;">
+              <div style="padding: 4px 8px;">⚙️ 设置</div>
+              <div style="padding: 4px 8px;">👤 账户</div>
+            </div>
+          </div>
+          <!-- Main chat -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <!-- Header -->
+            <div style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 28px; height: 28px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;">Z</div>
+              <div>
+                <div style="font-weight: 600; font-size: 13px;">Z哥</div>
+                <div style="font-size: 11px; color: #64748b;">超短/情绪/四块砖交易体系</div>
+              </div>
+              <div style="margin-left: auto; display: flex; gap: 6px;">
+                <span style="background: #dbeafe; color: #2563eb; padding: 2px 8px; border-radius: 12px; font-size: 11px;">KDJ</span>
+                <span style="background: #dbeafe; color: #2563eb; padding: 2px 8px; border-radius: 12px; font-size: 11px;">MACD</span>
+                <span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 12px; font-size: 11px;">B1 信号</span>
+              </div>
+            </div>
+            <!-- Messages -->
+            <div style="flex: 1; padding: 16px; overflow-y: auto; font-size: 13px;">
+              <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <div style="width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%; flex-shrink: 0;"></div>
+                <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 12px; max-width: 70%;">帮我看看茅台的 B1 信号</div>
+              </div>
+              <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: row-reverse;">
+                <div style="width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">Z</div>
+                <div style="background: #eff6ff; padding: 8px 12px; border-radius: 12px; max-width: 70%; border: 1px solid #bfdbfe;">
+                  <div style="margin-bottom: 6px;">茅台现在 J 值打到 8.3，KDJ 金叉刚形成。BBI 之上，四块砖里第三块绿砖缩短...</div>
+                  <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                    <span style="background: #dcfce7; color: #16a34a; padding: 1px 6px; border-radius: 4px; font-size: 11px;">B1 ✅</span>
+                    <span style="background: #fef3c7; color: #d97706; padding: 1px 6px; border-radius: 4px; font-size: 11px;">J=8.3</span>
+                    <span style="background: #dbeafe; color: #2563eb; padding: 1px 6px; border-radius: 4px; font-size: 11px;">KDJ 金叉</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Input -->
+            <div style="padding: 12px 16px; border-top: 1px solid #e2e8f0;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 8px 16px; color: #94a3b8; font-size: 13px;">输入你的问题...</div>
+                <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">↑</div>
+              </div>
+            </div>
+          </div>
+          <!-- Right panel -->
+          <div style="width: 280px; background: #f8fafc; border-left: 1px solid #e2e8f0; padding: 12px; font-size: 12px;">
+            <div style="font-weight: 600; margin-bottom: 10px; font-size: 13px;">📈 技术面板</div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+              <div style="font-weight: 500; margin-bottom: 6px;">KDJ 指标</div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: #64748b;">J 值</span><span style="color: #dc2626; font-weight: 600;">8.3</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: #64748b;">K/D</span><span>23.5 / 19.2</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b;">信号</span><span style="color: #16a34a;">金叉 ✅</span>
+              </div>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+              <div style="font-weight: 500; margin-bottom: 6px;">策略信号</div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: #64748b;">B1</span><span style="color: #16a34a; font-weight: 600;">触发</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b;">置信度</span><span>72%</span>
+              </div>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+              <div style="font-weight: 500; margin-bottom: 6px;">知识库引用</div>
+              <div style="color: #3b82f6; font-size: 11px;">[[B1 信号识别]]</div>
+              <div style="color: #3b82f6; font-size: 11px;">[[四块砖交易法]]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top: 8px; font-size: 13px; color: #64748b;">对话为核心，右侧实时展示技术指标和策略信号。适合<strong>分析驱动</strong>的使用场景。</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>顶部导航 + 全屏对话/图表切换</h3>
+      <div class="mockup">
+        <div class="mockup-header">布局 B：沉浸式</div>
+        <div class="mockup-body" style="padding: 0; height: 320px; display: flex; flex-direction: column;">
+          <!-- Top nav -->
+          <div style="padding: 8px 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 16px; background: white;">
+            <div style="font-weight: 700; font-size: 15px;">PersonaX</div>
+            <div style="display: flex; gap: 4px;">
+              <span style="padding: 4px 12px; background: #3b82f6; color: white; border-radius: 6px; font-size: 12px;">💬 对话</span>
+              <span style="padding: 4px 12px; background: #f1f5f9; border-radius: 6px; font-size: 12px;">📈 图表</span>
+              <span style="padding: 4px 12px; background: #f1f5f9; border-radius: 6px; font-size: 12px;">📊 财报</span>
+              <span style="padding: 4px 12px; background: #f1f5f9; border-radius: 6px; font-size: 12px;">🔍 筛选</span>
+            </div>
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+              <div style="display: flex; gap: 4px;">
+                <span style="padding: 3px 8px; background: #dbeafe; color: #2563eb; border-radius: 12px; font-size: 11px; cursor: pointer;">Z哥</span>
+                <span style="padding: 3px 8px; background: #f1f5f9; border-radius: 12px; font-size: 11px; cursor: pointer;">付鹏</span>
+                <span style="padding: 3px 8px; background: #f1f5f9; border-radius: 12px; font-size: 11px; cursor: pointer;">BOSS墨</span>
+              </div>
+              <div style="width: 28px; height: 28px; background: #e2e8f0; border-radius: 50%;"></div>
+            </div>
+          </div>
+          <!-- Full screen chat area -->
+          <div style="flex: 1; display: flex; flex-direction: column; padding: 20px 40px;">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+              <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">你好，我是 Z 哥</div>
+              <div style="color: #64748b; margin-bottom: 24px;">超短 / 情绪 / 四块砖交易体系 · 输入股票代码或问题开始分析</div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+                <span style="padding: 6px 16px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 13px; cursor: pointer;">茅台 B1 信号</span>
+                <span style="padding: 6px 16px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 13px; cursor: pointer;">宁德时代怎么看</span>
+                <span style="padding: 6px 16px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 13px; cursor: pointer;">财报排雷 600519</span>
+              </div>
+            </div>
+            <div style="max-width: 600px; margin: 0 auto; width: 100%;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 24px; padding: 12px 20px; color: #94a3b8; font-size: 14px;">输入你的问题...</div>
+                <div style="width: 40px; height: 40px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">↑</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top: 8px; font-size: 13px; color: #64748b;">全屏沉浸式体验，通过顶部 Tab 切换功能模块。适合<strong>产品感强</strong>的对外场景。</p>
+    </div>
+  </div>
+</div>

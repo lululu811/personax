@@ -1,0 +1,152 @@
+<h2>财报分析页面</h2>
+<p class="subtitle">五维排雷 + 杜邦分析 + 估值的展示方案</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>仪表盘式总览</h3>
+      <div class="mockup">
+        <div class="mockup-header">财报分析仪表盘</div>
+        <div class="mockup-body" style="padding: 0; height: 360px; overflow-y: auto;">
+          <!-- Header -->
+          <div style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-weight: 700;">PersonaX</span>
+              <span style="padding: 4px 12px; background: #f1f5f9; border-radius: 6px; font-size: 12px;">💬 对话</span>
+              <span style="padding: 4px 12px; background: #f1f5f9; border-radius: 6px; font-size: 12px;">📈 图表</span>
+              <span style="padding: 4px 12px; background: #3b82f6; color: white; border-radius: 6px; font-size: 12px;">📊 财报</span>
+            </div>
+            <span style="font-size: 12px; color: #64748b;">600519 贵州茅台</span>
+          </div>
+          <div style="padding: 16px;">
+            <!-- Stock info bar -->
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 12px; background: #f8fafc; border-radius: 8px;">
+              <div>
+                <div style="font-weight: 700; font-size: 18px;">贵州茅台</div>
+                <div style="color: #64748b; font-size: 12px;">600519.SH · 白酒</div>
+              </div>
+              <div style="margin-left: auto; text-align: right;">
+                <div style="color: #ef4444; font-weight: 700; font-size: 20px;">1842.80</div>
+                <div style="color: #ef4444; font-size: 12px;">+1.23%</div>
+              </div>
+              <div style="margin-left: 24px;">
+                <div style="font-size: 12px; color: #64748b;">综合评级</div>
+                <div style="color: #16a34a; font-weight: 700; font-size: 18px;">持有 ⭐</div>
+              </div>
+            </div>
+            <!-- Five dimension scores -->
+            <div style="font-weight: 600; margin-bottom: 10px;">五维排雷评分</div>
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px;">
+              <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">收入真实性</div>
+                <div style="font-size: 24px; font-weight: 700; color: #16a34a;">85</div>
+                <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px;"><div style="width: 85%; height: 100%; background: #22c55e; border-radius: 2px;"></div></div>
+              </div>
+              <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">利润质量</div>
+                <div style="font-size: 24px; font-weight: 700; color: #16a34a;">92</div>
+                <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px;"><div style="width: 92%; height: 100%; background: #22c55e; border-radius: 2px;"></div></div>
+              </div>
+              <div style="background: #fefce8; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">现金流</div>
+                <div style="font-size: 24px; font-weight: 700; color: #d97706;">68</div>
+                <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px;"><div style="width: 68%; height: 100%; background: #f59e0b; border-radius: 2px;"></div></div>
+              </div>
+              <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">资产负债</div>
+                <div style="font-size: 24px; font-weight: 700; color: #16a34a;">88</div>
+                <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px;"><div style="width: 88%; height: 100%; background: #22c55e; border-radius: 2px;"></div></div>
+              </div>
+              <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">股东回报</div>
+                <div style="font-size: 24px; font-weight: 700; color: #16a34a;">78</div>
+                <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px;"><div style="width: 78%; height: 100%; background: #22c55e; border-radius: 2px;"></div></div>
+              </div>
+            </div>
+            <!-- DuPont + Valuation -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+                <div style="font-weight: 600; margin-bottom: 8px; font-size: 13px;">杜邦分析</div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                  <span style="color: #64748b;">ROE</span><span style="font-weight: 600;">33.5%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                  <span style="color: #64748b;">净利率</span><span>52.1%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                  <span style="color: #64748b;">资产周转</span><span>0.42</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                  <span style="color: #64748b;">权益乘数</span><span>1.53</span>
+                </div>
+              </div>
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+                <div style="font-weight: 600; margin-bottom: 8px; font-size: 13px;">估值分析</div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                  <span style="color: #64748b;">PE (TTM)</span><span style="font-weight: 600;">28.3</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                  <span style="color: #64748b;">PB</span><span>9.5</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                  <span style="color: #64748b;">PEG</span><span>1.8</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                  <span style="color: #64748b;">估值判断</span><span style="color: #d97706;">偏高</span>
+                </div>
+              </div>
+            </div>
+            <!-- Risk flags -->
+            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+              <div style="font-weight: 600; color: #dc2626; margin-bottom: 6px; font-size: 13px;">⚠ 风险提示</div>
+              <div style="font-size: 12px; color: #7f1d1d; line-height: 1.6;">
+                • 经营性现金流同比下降 12%，需关注回款情况<br>
+                • PE 28.3 高于行业均值 22.5，估值偏高
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top: 8px; font-size: 13px; color: #64748b;">仪表盘式总览，<strong>五维评分 + 杜邦 + 估值 + 风险</strong>一屏看完。适合快速决策。</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>对话内嵌分析卡片</h3>
+      <div class="mockup">
+        <div class="mockup-header">财报分析结果嵌入对话</div>
+        <div class="mockup-body" style="font-size: 12px; max-height: 360px; overflow-y: auto;">
+          <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: row-reverse;">
+            <div style="width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%;"></div>
+            <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 12px;">茅台财报排雷</div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <div style="width: 24px; height: 24px; background: #10b981; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">📊</div>
+            <div style="max-width: 80%;">
+              <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #86efac; border-radius: 12px; padding: 12px; margin-bottom: 8px;">
+                <div style="font-weight: 600; margin-bottom: 8px;">五维排雷：82/100 · 持有 ⭐</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                  <span style="background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px;">收入 85</span>
+                  <span style="background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px;">利润 92</span>
+                  <span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 4px;">现金流 68</span>
+                  <span style="background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px;">负债 88</span>
+                  <span style="background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px;">回报 78</span>
+                </div>
+                <div style="font-size: 11px; color: #374151; line-height: 1.5;">
+                  ROE 33.5%（净利率 52.1% × 周转 0.42 × 杠杆 1.53），现金流同比下降 12% 需关注。
+                </div>
+              </div>
+              <div style="text-align: center;">
+                <span style="color: #3b82f6; font-size: 11px; cursor: pointer;">📊 查看完整财报分析 →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top: 8px; font-size: 13px; color: #64748b;">财报分析嵌入对话回复，<strong>摘要卡片 + 展开链接</strong>。与图表方案 B 思路一致。</p>
+    </div>
+  </div>
+</div>

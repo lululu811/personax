@@ -2,6 +2,31 @@
 
 > 人格化 AI Agent 框架 — 将量化分析、知识库查询与 LLM 融合，以特定人格语气生成投资分析。
 
+## 触发条件
+
+当用户提出以下类型的需求时，进入 PersonaX Agent 模式：
+- "帮我分析 XX 股票" / "看看茅台" / "黄金现在能买吗"
+- "用 Z 哥/付鹏/Boss墨 的视角看 XX"
+- "跑一下 B1/B2 策略" / "财务排雷"
+- "新增 persona" / "新增指标" / "新增策略"
+
+## 边界控制
+
+**这是代码仓库，不是交易终端。**
+- 我能做的是：读代码、跑分析脚本、修改配置、写测试
+- 我不能做的是：实盘交易、实时监控、自动下单
+- 所有分析结果仅供参考，不构成投资建议
+
+**不要替用户做决定。**
+- 不自动修改 `.env` 中的 API Key
+- 不自动注册 git commit（除非明确要求）
+- 不自动同步数据到数据库（除非用户确认）
+
+**不要做超出项目范围的事。**
+- 不修改 `knowledge_base/` 下的 Obsidian vault 内容
+- 不修改 `skills/` 下的思维模型 skill 文件
+- 不修改 `.omc/` 运行时状态
+
 ## 架构
 
 三层解耦：
@@ -29,6 +54,8 @@ query → Router → [Knowledge Query | Tool Cache | Data Sync] → Strategies �
 │   └── financial_reports/ # 财报分析（五维排雷法、杜邦分析、估值）
 ├── personas/              # 人格层
 │   ├── zettaranc/         # Z 哥 — 超短/情绪/四块砖交易体系
+│   ├── fupeng/            # 付鹏 — 宏观策略/杠铃/哑铃
+│   ├── boss_mo/           # BOSS墨 — 技术派/次高与分水
 │   └── financial_analyst/ # 财务分析师 — 五维排雷/杜邦/估值
 ├── knowledge/             # 知识层
 │   ├── wiki_query.py      # 非向量化 wiki 查询（关键词+标签匹配）
@@ -45,7 +72,7 @@ query → Router → [Knowledge Query | Tool Cache | Data Sync] → Strategies �
 
 ## 开发规范
 
-- **新增 persona**: 在 `personas/{name}/` 下创建 personality.md + SKILL.md + strategies/
+- **新增 persona**: 在 `personas/{name}/` 下创建 personality.md + SKILL.md + strategies/ + overrides.yaml
 - **新增指标**: 在 `tools/quant/technical/` 下实现，注册到 `__init__.py`
 - **新增策略**: 继承 `BaseStrategy`，实现 `analyze(df) -> StrategySignal`
 - **新增工具**: 实现 `run(query, df) -> ToolResult`，注册到 `registry/tools.yaml`
@@ -59,6 +86,7 @@ query → Router → [Knowledge Query | Tool Cache | Data Sync] → Strategies �
 | `LLM_PROVIDER` | 提供商：dashscope / kimi / anthropic / minimax / bailian |
 | `TUSHARE_TOKEN` | Tushare 数据源 token |
 | `TUSHARE_BASE_URL` | Tushare 代理地址（第三方代理时修改）|
+| `MINIMAX_API_KEY` | MiniMax WebSearch API Key（Token Plan）|
 | `WIKI_PUBLIC_DIRS` | 公共 wiki 路径（逗号分隔）|
 | `WIKI_PERSONAL_DIRS` | 个人 wiki 路径（逗号分隔）|
 
@@ -76,6 +104,7 @@ python3 -m pytest tests/ -v --tb=short
 2. **LLM 优先 + 规则兜底** — 财报分析先用 LLM 提取结构化数据，失败时回退到正则
 3. **五维排雷法** — 收入真实性、利润质量、现金流健康、资产负债表、股东回报
 4. **模板模式** — 无 LLM API 时，ResponseGenerator 回退到结构化模板输出
+5. **WebSearch 降级** — 未配置 `MINIMAX_API_KEY` 时自动跳过 provider，不影响其他功能
 
 ## 启动校验
 

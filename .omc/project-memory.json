@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1778332230342,
+  "lastScanned": 1778509489958,
   "projectRoot": "/home/chenlei/001_AI/personax",
   "techStack": {
     "languages": [
@@ -9,18 +9,25 @@
         "version": null,
         "confidence": "high",
         "markers": [
+          "pyproject.toml",
           "requirements.txt"
         ]
       }
     ],
-    "frameworks": [],
+    "frameworks": [
+      {
+        "name": "pytest",
+        "version": null,
+        "category": "testing"
+      }
+    ],
     "packageManager": "pip",
     "runtime": null
   },
   "build": {
     "buildCommand": null,
-    "testCommand": "python3 -m pytest tests/test_financial_reports.py -v",
-    "lintCommand": null,
+    "testCommand": "pytest tests/agent_team/ -v --tb=short",
+    "lintCommand": "ruff check",
     "devCommand": null,
     "scripts": {}
   },
@@ -46,16 +53,27 @@
       "path": ":memory:",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1778332230338,
+      "lastAccessed": 1778509489952,
       "keyFiles": [
         "chroma.sqlite3"
+      ]
+    },
+    "api": {
+      "path": "api",
+      "purpose": "API routes",
+      "fileCount": 3,
+      "lastAccessed": 1778509489953,
+      "keyFiles": [
+        "__init__.py",
+        "config.py",
+        "main.py"
       ]
     },
     "bridge": {
       "path": "bridge",
       "purpose": null,
       "fileCount": 3,
-      "lastAccessed": 1778332230339,
+      "lastAccessed": 1778509489954,
       "keyFiles": [
         "__init__.py",
         "knowledge_bridge.py",
@@ -65,11 +83,12 @@
     "data": {
       "path": "data",
       "purpose": "Data files",
-      "fileCount": 4,
-      "lastAccessed": 1778332230340,
+      "fileCount": 5,
+      "lastAccessed": 1778509489955,
       "keyFiles": [
         "__init__.py",
         "db.py",
+        "personax_web.db",
         "schema.sql",
         "sync.py"
       ]
@@ -77,17 +96,18 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 1,
-      "lastAccessed": 1778332230340,
+      "fileCount": 2,
+      "lastAccessed": 1778509489955,
       "keyFiles": [
-        "2026-05-06-personax-design.md"
+        "2026-05-06-personax-design.md",
+        "wechat-article.md"
       ]
     },
     "knowledge": {
       "path": "knowledge",
       "purpose": null,
-      "fileCount": 7,
-      "lastAccessed": 1778332230340,
+      "fileCount": 8,
+      "lastAccessed": 1778509489955,
       "keyFiles": [
         "__init__.py",
         "chunker.py",
@@ -99,28 +119,30 @@
     "orchestration": {
       "path": "orchestration",
       "purpose": null,
-      "fileCount": 5,
-      "lastAccessed": 1778332230340,
+      "fileCount": 9,
+      "lastAccessed": 1778509489955,
       "keyFiles": [
         "__init__.py",
+        "conversation.py",
         "engine.py",
-        "router.py",
-        "signal_aggregator.py",
-        "tool_cache.py"
+        "models.py",
+        "response_generator.py"
       ]
     },
     "personas": {
       "path": "personas",
       "purpose": null,
-      "fileCount": 0,
-      "lastAccessed": 1778332230340,
-      "keyFiles": []
+      "fileCount": 1,
+      "lastAccessed": 1778509489955,
+      "keyFiles": [
+        "persona_loader.py"
+      ]
     },
     "quant": {
       "path": "quant",
       "purpose": null,
       "fileCount": 3,
-      "lastAccessed": 1778332230340,
+      "lastAccessed": 1778509489955,
       "keyFiles": [
         "__init__.py",
         "api.py",
@@ -130,20 +152,21 @@
     "registry": {
       "path": "registry",
       "purpose": null,
-      "fileCount": 4,
-      "lastAccessed": 1778332230341,
+      "fileCount": 6,
+      "lastAccessed": 1778509489955,
       "keyFiles": [
         "data_sources.yaml",
         "indicators.yaml",
         "knowledge_bases.yaml",
-        "personas.yaml"
+        "personas.yaml",
+        "web_search.yaml"
       ]
     },
     "scripts": {
       "path": "scripts",
       "purpose": "Build/utility scripts",
       "fileCount": 4,
-      "lastAccessed": 1778332230341,
+      "lastAccessed": 1778509489955,
       "keyFiles": [
         "setup.py",
         "sync_data.py",
@@ -154,21 +177,23 @@
     "shared": {
       "path": "shared",
       "purpose": null,
-      "fileCount": 2,
-      "lastAccessed": 1778332230341,
+      "fileCount": 3,
+      "lastAccessed": 1778509489956,
       "keyFiles": [
         "__init__.py",
-        "config.py"
+        "config.py",
+        "env_check.py"
       ]
     },
     "tests": {
       "path": "tests",
       "purpose": "Test files",
-      "fileCount": 3,
-      "lastAccessed": 1778332230341,
+      "fileCount": 4,
+      "lastAccessed": 1778509489956,
       "keyFiles": [
         "__init__.py",
         "test_architecture_integration.py",
+        "test_financial_reports.py",
         "test_integration.py"
       ]
     },
@@ -176,311 +201,286 @@
       "path": "tools",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1778332230341,
+      "lastAccessed": 1778509489956,
       "keyFiles": [
         "__init__.py"
       ]
+    },
+    "web": {
+      "path": "web",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1778509489956,
+      "keyFiles": [
+        "app.vue",
+        "nuxt.config.ts",
+        "package-lock.json",
+        "package.json",
+        "tailwind.config.ts"
+      ]
+    },
+    "api/tests": {
+      "path": "api/tests",
+      "purpose": "Test files",
+      "fileCount": 6,
+      "lastAccessed": 1778509489957,
+      "keyFiles": [
+        "__init__.py",
+        "conftest.py",
+        "test_auth.py"
+      ]
+    },
+    "web/components": {
+      "path": "web/components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1778509489957,
+      "keyFiles": []
+    },
+    "web/middleware": {
+      "path": "web/middleware",
+      "purpose": "Middleware",
+      "fileCount": 1,
+      "lastAccessed": 1778509489957,
+      "keyFiles": [
+        "auth.ts"
+      ]
+    },
+    "web/node_modules": {
+      "path": "web/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1778509489958,
+      "keyFiles": []
     }
   },
   "hotPaths": [
     {
-      "path": "orchestration/engine.py",
-      "accessCount": 27,
-      "lastAccessed": 1778336982721,
+      "path": "docs/superpowers/plans/2026-05-11-agent-team-implementation.md",
+      "accessCount": 15,
+      "lastAccessed": 1778514965537,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_agent.py",
+      "accessCount": 6,
+      "lastAccessed": 1778515313342,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/core/models.py",
+      "accessCount": 5,
+      "lastAccessed": 1778515295205,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_reward_engine.py",
+      "accessCount": 5,
+      "lastAccessed": 1778515563981,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/core/team.py",
+      "accessCount": 4,
+      "lastAccessed": 1778515295076,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_session.py",
+      "accessCount": 4,
+      "lastAccessed": 1778515313372,
       "type": "file"
     },
     {
       "path": "orchestration/response_generator.py",
-      "accessCount": 19,
-      "lastAccessed": 1778337916386,
+      "accessCount": 4,
+      "lastAccessed": 1778515322882,
       "type": "file"
     },
     {
-      "path": "personas/zettaranc/SKILL.md",
-      "accessCount": 6,
-      "lastAccessed": 1778336393493,
+      "path": "agent_team/health/checker.py",
+      "accessCount": 4,
+      "lastAccessed": 1778515508087,
       "type": "file"
     },
     {
-      "path": "orchestration/__init__.py",
-      "accessCount": 6,
-      "lastAccessed": 1778337069576,
+      "path": "agent_team/core/session.py",
+      "accessCount": 4,
+      "lastAccessed": 1778515520955,
       "type": "file"
     },
     {
-      "path": "personas/zettaranc/personality.md",
-      "accessCount": 5,
-      "lastAccessed": 1778334998221,
+      "path": "agent_team/core/reward.py",
+      "accessCount": 4,
+      "lastAccessed": 1778515537643,
       "type": "file"
     },
     {
-      "path": "personas/persona_loader.py",
-      "accessCount": 5,
-      "lastAccessed": 1778335215880,
+      "path": "agent_team/core/agent.py",
+      "accessCount": 3,
+      "lastAccessed": 1778515294965,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/core/moderator.py",
+      "accessCount": 3,
+      "lastAccessed": 1778515295094,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/persistence/__init__.py",
+      "accessCount": 3,
+      "lastAccessed": 1778515304029,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_health.py",
+      "accessCount": 3,
+      "lastAccessed": 1778515313182,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/persistence/feedback_store.py",
+      "accessCount": 3,
+      "lastAccessed": 1778515415851,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/modes/base.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515295049,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/modes/parallel.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515295263,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/modes/debate.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515295297,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/cli.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515295453,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/modes/__init__.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515303971,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/__init__.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515303986,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/core/__init__.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515304022,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/health/__init__.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515304072,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_parallel.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313138,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_team.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313226,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_debate.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313270,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_modes.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313320,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_moderator.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313364,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_integration.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313423,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_models.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313516,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_cli.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313581,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_reward.py",
+      "accessCount": 2,
+      "lastAccessed": 1778515313588,
       "type": "file"
     },
     {
       "path": "orchestration/router.py",
-      "accessCount": 4,
-      "lastAccessed": 1778336405457,
+      "accessCount": 1,
+      "lastAccessed": 1778510354809,
       "type": "file"
     },
     {
-      "path": "bridge/quant_bridge.py",
-      "accessCount": 3,
-      "lastAccessed": 1778334003096,
+      "path": "orchestration/engine.py",
+      "accessCount": 1,
+      "lastAccessed": 1778510355312,
       "type": "file"
     },
     {
-      "path": "orchestration/signal_aggregator.py",
-      "accessCount": 3,
-      "lastAccessed": 1778336344726,
-      "type": "file"
-    },
-    {
-      "path": "tools/quant/technical/interface.py",
-      "accessCount": 3,
-      "lastAccessed": 1778336405446,
+      "path": "docs/superpowers/specs/2026-05-11-agent-team-design.md",
+      "accessCount": 1,
+      "lastAccessed": 1778512385367,
       "type": "file"
     },
     {
       "path": ".env",
-      "accessCount": 2,
-      "lastAccessed": 1778166054629,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/overrides.yaml",
-      "accessCount": 2,
-      "lastAccessed": 1778333249465,
-      "type": "file"
-    },
-    {
-      "path": "quant/api.py",
-      "accessCount": 2,
-      "lastAccessed": 1778333990113,
-      "type": "file"
-    },
-    {
-      "path": "bridge/knowledge_bridge.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334003231,
-      "type": "file"
-    },
-    {
-      "path": "data/sources/tushare_source.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334003321,
-      "type": "file"
-    },
-    {
-      "path": "registry/personas.yaml",
-      "accessCount": 2,
-      "lastAccessed": 1778334033592,
-      "type": "file"
-    },
-    {
-      "path": "knowledge/query.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334033605,
-      "type": "file"
-    },
-    {
-      "path": "registry/knowledge_bases.yaml",
-      "accessCount": 2,
-      "lastAccessed": 1778334033794,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/__init__.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334052369,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/pattern_strategies.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334068532,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/b1.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334068541,
-      "type": "file"
-    },
-    {
-      "path": "data/sync.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334068564,
-      "type": "file"
-    },
-    {
-      "path": "shared/config.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334173951,
-      "type": "file"
-    },
-    {
-      "path": "orchestration/tool_cache.py",
-      "accessCount": 2,
-      "lastAccessed": 1778334174005,
-      "type": "file"
-    },
-    {
-      "path": "docs/superpowers/specs/2026-05-09-financial-report-tool-design.md",
-      "accessCount": 2,
-      "lastAccessed": 1778336968259,
-      "type": "file"
-    },
-    {
-      "path": "requirements.txt",
       "accessCount": 1,
-      "lastAccessed": 1778163822209,
+      "lastAccessed": 1778513659297,
       "type": "file"
     },
     {
-      "path": ".env.example",
+      "path": ".baoyu-skills/baoyu-imagine/EXTEND.md",
       "accessCount": 1,
-      "lastAccessed": 1778163825136,
+      "lastAccessed": 1778513677713,
       "type": "file"
     },
     {
-      "path": "tests/test_architecture_integration.py",
+      "path": "tests/agent_team/__init__.py",
       "accessCount": 1,
-      "lastAccessed": 1778332287135,
-      "type": "file"
-    },
-    {
-      "path": "docs/2026-05-06-personax-design.md",
-      "accessCount": 1,
-      "lastAccessed": 1778332413882,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/b2_break.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333986106,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/five_score.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333986171,
-      "type": "file"
-    },
-    {
-      "path": "data/db.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333990165,
-      "type": "file"
-    },
-    {
-      "path": "quant/registry.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333990181,
-      "type": "file"
-    },
-    {
-      "path": "data/sources/base.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333990191,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/pit_target.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333996679,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/s1_warning.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333996684,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/three_waves.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333996692,
-      "type": "file"
-    },
-    {
-      "path": "personas/zettaranc/strategies/ultimate_b1.py",
-      "accessCount": 1,
-      "lastAccessed": 1778333996697,
-      "type": "file"
-    },
-    {
-      "path": "tools/quant/technical/__init__.py",
-      "accessCount": 1,
-      "lastAccessed": 1778334003279,
-      "type": "file"
-    },
-    {
-      "path": "quant/indicators/__init__.py",
-      "accessCount": 1,
-      "lastAccessed": 1778334003291,
-      "type": "file"
-    },
-    {
-      "path": "knowledge/store.py",
-      "accessCount": 1,
-      "lastAccessed": 1778334033630,
-      "type": "file"
-    },
-    {
-      "path": "registry/data_sources.yaml",
-      "accessCount": 1,
-      "lastAccessed": 1778334033693,
-      "type": "file"
-    },
-    {
-      "path": "knowledge/sync.py",
-      "accessCount": 1,
-      "lastAccessed": 1778334033708,
-      "type": "file"
-    },
-    {
-      "path": "registry/indicators.yaml",
-      "accessCount": 1,
-      "lastAccessed": 1778334033725,
-      "type": "file"
-    },
-    {
-      "path": "knowledge/embeddings.py",
-      "accessCount": 1,
-      "lastAccessed": 1778334033733,
-      "type": "file"
-    },
-    {
-      "path": "knowledge/chunker.py",
-      "accessCount": 1,
-      "lastAccessed": 1778334033742,
-      "type": "file"
-    },
-    {
-      "path": "tools/quant/technical/kdj.py",
-      "accessCount": 1,
-      "lastAccessed": 1778334068519,
-      "type": "file"
-    },
-    {
-      "path": "data/schema.sql",
-      "accessCount": 1,
-      "lastAccessed": 1778334068557,
-      "type": "file"
-    },
-    {
-      "path": "orchestration/conversation.py",
-      "accessCount": 1,
-      "lastAccessed": 1778336449435,
-      "type": "file"
-    },
-    {
-      "path": "tools/__init__.py",
-      "accessCount": 1,
-      "lastAccessed": 1778337069614,
+      "lastAccessed": 1778513680540,
       "type": "file"
     }
   ],

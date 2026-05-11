@@ -1,0 +1,139 @@
+<h2>诊断工作流 UI</h2>
+<p class="subtitle">3 轮诊断在对话中的呈现方式</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>嵌入式问诊卡片</h3>
+      <div class="mockup">
+        <div class="mockup-header">诊断卡片嵌在对话流中</div>
+        <div class="mockup-body" style="font-size: 12px; max-height: 360px; overflow-y: auto;">
+          <!-- User message -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: row-reverse;">
+            <div style="width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%; flex-shrink: 0;"></div>
+            <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 12px;">茅台现在能买吗</div>
+          </div>
+          <!-- Diagnosis card round 1 -->
+          <div style="background: linear-gradient(135deg, #eff6ff, #f0fdf4); border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;">Z</div>
+              <div>
+                <div style="font-weight: 600; font-size: 13px;">Z哥问诊</div>
+                <div style="font-size: 11px; color: #64748b;">第 1 轮 · 基础确认</div>
+              </div>
+              <div style="margin-left: auto; display: flex; gap: 4px;">
+                <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></span>
+                <span style="width: 8px; height: 8px; background: #e2e8f0; border-radius: 50%;"></span>
+                <span style="width: 8px; height: 8px; background: #e2e8f0; border-radius: 50%;"></span>
+              </div>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <div style="margin-bottom: 8px;">这事儿我得先问你几个问题，不一样的。</div>
+              <div style="margin-bottom: 6px; padding-left: 12px; border-left: 2px solid #93c5fd;">1. 你是做短线还是长线？</div>
+              <div style="margin-bottom: 6px; padding-left: 12px; border-left: 2px solid #93c5fd;">2. 现在是已经持有了，还是在看想进场？</div>
+              <div style="padding-left: 12px; border-left: 2px solid #93c5fd;">3. 这只票你占了多少仓位？</div>
+            </div>
+            <!-- Quick reply buttons -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <span style="padding: 4px 12px; background: white; border: 1px solid #93c5fd; border-radius: 16px; font-size: 11px; cursor: pointer; color: #2563eb;">短线 · 已持有 · 30%</span>
+              <span style="padding: 4px 12px; background: white; border: 1px solid #93c5fd; border-radius: 16px; font-size: 11px; cursor: pointer; color: #2563eb;">短线 · 想进场</span>
+              <span style="padding: 4px 12px; background: white; border: 1px solid #93c5fd; border-radius: 16px; font-size: 11px; cursor: pointer; color: #2563eb;">长线配置</span>
+            </div>
+          </div>
+          <!-- Diagnosis card round 2 -->
+          <div style="background: linear-gradient(135deg, #fefce8, #fef3c7); border: 1px solid #fde68a; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;">Z</div>
+              <div>
+                <div style="font-weight: 600; font-size: 13px;">Z哥问诊</div>
+                <div style="font-size: 11px; color: #64748b;">第 2 轮 · 买点确认</div>
+              </div>
+              <div style="margin-left: auto; display: flex; gap: 4px;">
+                <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></span>
+                <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></span>
+                <span style="width: 8px; height: 8px; background: #e2e8f0; border-radius: 50%;"></span>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px;">好，进入「买点确认」流程。</div>
+            <div style="margin-bottom: 6px; padding-left: 12px; border-left: 2px solid #fbbf24;">你看到什么信号了？J 值打到多少了？</div>
+            <div style="margin-bottom: 6px; padding-left: 12px; border-left: 2px solid #fbbf24;">现在是主线票还是主题票？</div>
+            <div style="padding-left: 12px; border-left: 2px solid #fbbf24;">今天的量比是多少？</div>
+          </div>
+          <!-- Final analysis -->
+          <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;">Z</div>
+              <div>
+                <div style="font-weight: 600; font-size: 13px;">Z哥诊断结论</div>
+                <div style="font-size: 11px; color: #64748b;">第 3 轮 · 综合判断</div>
+              </div>
+              <div style="margin-left: auto; display: flex; gap: 4px;">
+                <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%;"></span>
+                <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%;"></span>
+                <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%;"></span>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px; font-weight: 500;">B1 信号确认，可以轻仓试探。</div>
+            <div style="color: #374151; font-size: 12px; line-height: 1.6;">
+              J 值 8.3，KDJ 金叉刚形成，BBI 之上。四块砖第三块绿砖缩短，量比 1.2，主线票无疑。<br>
+              <strong>建议：</strong>5% 仓位试探，止损设在买入当日最低价。
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top: 8px; font-size: 13px; color: #64748b;">诊断卡片嵌入对话流，<strong>进度条 + 快捷回复</strong>提升交互效率。最自然的对话体验。</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>侧边弹出诊断面板</h3>
+      <div class="mockup">
+        <div class="mockup-header">诊断以侧边面板形式弹出</div>
+        <div class="mockup-body" style="padding: 0; height: 340px; display: flex; position: relative;">
+          <!-- Chat behind -->
+          <div style="flex: 1; padding: 16px; font-size: 12px; opacity: 0.5;">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: row-reverse;">
+              <div style="width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%;"></div>
+              <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 12px;">茅台现在能买吗</div>
+            </div>
+          </div>
+          <!-- Slide-in panel -->
+          <div style="width: 360px; background: white; border-left: 1px solid #e2e8f0; box-shadow: -4px 0 16px rgba(0,0,0,0.08); padding: 16px; font-size: 12px; overflow-y: auto;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <div style="font-weight: 600; font-size: 14px;">🩺 诊断工作流</div>
+              <span style="color: #94a3b8; cursor: pointer;">✕</span>
+            </div>
+            <!-- Progress -->
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <div style="flex: 1; height: 4px; background: #3b82f6; border-radius: 2px;"></div>
+              <div style="flex: 1; height: 4px; background: #3b82f6; border-radius: 2px;"></div>
+              <div style="flex: 1; height: 4px; background: #e2e8f0; border-radius: 2px;"></div>
+            </div>
+            <div style="text-align: center; font-size: 11px; color: #64748b; margin-bottom: 12px;">第 2 轮 / 共 3 轮 · 买点确认</div>
+            <!-- Questions -->
+            <div style="background: #fefce8; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+              <div style="margin-bottom: 8px;">你看到什么信号了？J 值打到多少了？</div>
+              <input style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; box-sizing: border-box;" placeholder="输入你的回答...">
+            </div>
+            <div style="background: #fefce8; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+              <div style="margin-bottom: 8px;">现在是主线票还是主题票？</div>
+              <div style="display: flex; gap: 6px;">
+                <span style="padding: 4px 12px; background: white; border: 1px solid #fde68a; border-radius: 16px; font-size: 11px; cursor: pointer;">主线</span>
+                <span style="padding: 4px 12px; background: white; border: 1px solid #fde68a; border-radius: 16px; font-size: 11px; cursor: pointer;">主题</span>
+              </div>
+            </div>
+            <div style="background: #fefce8; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+              <div style="margin-bottom: 8px;">今天的量比是多少？</div>
+              <input style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; box-sizing: border-box;" placeholder="例如：1.2">
+            </div>
+            <button style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">提交回答 →</button>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top: 8px; font-size: 13px; color: #64748b;">诊断以<strong>侧边面板</strong>形式弹出，不打断对话流。适合结构化表单填写。</p>
+    </div>
+  </div>
+</div>

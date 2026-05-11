@@ -73,6 +73,9 @@ class TeamSession:
         if self.current_debate_state and self.current_debate_state.round_num >= self.MAX_DEEP_DIVE_ROUNDS:
             raise SessionLimitError(f"已达到最大辩论轮次 ({self.MAX_DEEP_DIVE_ROUNDS})")
 
+        if not self.team.get_agent(agent_name):
+            raise ValueError(f"Agent {agent_name} not found in team")
+
         self.status = SessionStatus.DEBATING
         self.current_deep_dive = agent_name
 

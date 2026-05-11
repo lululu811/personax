@@ -1,0 +1,97 @@
+<h2>架构方案对比</h2>
+<p class="subtitle">Nuxt 3 前端 + Python 后端的 3 种集成方式</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Nuxt 3 + FastAPI（推荐）</h3>
+      <p><strong>架构：</strong>Nuxt 3 前端 ↔ FastAPI 后端（REST + WebSocket）</p>
+      <div class="mockup" style="margin: 12px 0">
+        <div class="mockup-body" style="font-size: 13px; line-height: 1.8">
+          <div style="display:flex;gap:12px;align-items:center;justify-content:center">
+            <div style="background:#3b82f6;color:white;padding:8px 16px;border-radius:8px;text-align:center">Nuxt 3<br><small>Vue + SSR</small></div>
+            <div style="font-size:20px">↔</div>
+            <div style="background:#10b981;color:white;padding:8px 16px;border-radius:8px;text-align:center">FastAPI<br><small>Python</small></div>
+            <div style="font-size:20px">→</div>
+            <div style="background:#6366f1;color:white;padding:8px 16px;border-radius:8px;text-align:center">Engine<br><small>PersonaX</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优势</h4><ul>
+          <li>前后端完全解耦，可独立开发/部署</li>
+          <li>FastAPI 自动生成 API 文档（Swagger）</li>
+          <li>WebSocket 原生支持，适合 LLM 流式输出</li>
+          <li>Python 后端可直接调用 OrchestrationEngine</li>
+        </ul></div>
+        <div class="cons"><h4>劣势</h4><ul>
+          <li>需要维护两个服务（Nuxt + FastAPI）</li>
+          <li>跨域配置、进程管理稍复杂</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Nuxt 3 + Python 子进程</h3>
+      <p><strong>架构：</strong>Nuxt API Routes 通过 child_process 调用 Python CLI</p>
+      <div class="mockup" style="margin: 12px 0">
+        <div class="mockup-body" style="font-size: 13px; line-height: 1.8">
+          <div style="display:flex;gap:12px;align-items:center;justify-content:center">
+            <div style="background:#3b82f6;color:white;padding:8px 16px;border-radius:8px;text-align:center">Nuxt 3<br><small>前端 + API</small></div>
+            <div style="font-size:20px">→</div>
+            <div style="background:#f59e0b;color:white;padding:8px 16px;border-radius:8px;text-align:center">subprocess<br><small>调用 Python</small></div>
+            <div style="font-size:20px">→</div>
+            <div style="background:#6366f1;color:white;padding:8px 16px;border-radius:8px;text-align:center">Engine<br><small>PersonaX</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优势</h4><ul>
+          <li>单服务部署，最简单</li>
+          <li>可复用现有 bridge 脚本</li>
+        </ul></div>
+        <div class="cons"><h4>劣势</h4><ul>
+          <li>每次请求启动 Python 进程，冷启动慢</li>
+          <li>无法做流式输出（LLM streaming）</li>
+          <li>进程间通信复杂，错误处理困难</li>
+          <li>不适合生产环境</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Nuxt 3 + Python WebSocket 服务</h3>
+      <p><strong>架构：</strong>Nuxt 前端 ↔ Python WebSocket 服务（实时双向通信）</p>
+      <div class="mockup" style="margin: 12px 0">
+        <div class="mockup-body" style="font-size: 13px; line-height: 1.8">
+          <div style="display:flex;gap:12px;align-items:center;justify-content:center">
+            <div style="background:#3b82f6;color:white;padding:8px 16px;border-radius:8px;text-align:center">Nuxt 3<br><small>Vue + SSR</small></div>
+            <div style="font-size:20px">⇄</div>
+            <div style="background:#ef4444;color:white;padding:8px 16px;border-radius:8px;text-align:center">WebSocket<br><small>Python</small></div>
+            <div style="font-size:20px">→</div>
+            <div style="background:#6366f1;color:white;padding:8px 16px;border-radius:8px;text-align:center">Engine<br><small>PersonaX</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优势</h4><ul>
+          <li>实时双向通信，适合诊断工作流</li>
+          <li>天然支持 LLM 流式输出</li>
+          <li>可推送实时信号更新</li>
+        </ul></div>
+        <div class="cons"><h4>劣势</h4><ul>
+          <li>WebSocket 状态管理复杂</li>
+          <li>不如 REST 直观，调试困难</li>
+          <li>需要额外的重连/心跳机制</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</div>

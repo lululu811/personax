@@ -31,11 +31,12 @@ class TestRewardEngine:
         assert weights["zettaranc"].reputation_score == 1.375  # _map_score_to_reputation(4.5)
 
     def test_get_personalized_team(self, engine):
-        result = engine.get_personalized_team(
-            query="帮我看看茅台的技术面",
-            available_agents=["zettaranc", "boss_mo", "fupeng"],
-            top_k=2,
-        )
+        with patch.object(engine, "_should_explore", return_value=False):
+            result = engine.get_personalized_team(
+                query="帮我看看茅台的技术面",
+                available_agents=["zettaranc", "boss_mo", "fupeng"],
+                top_k=2,
+            )
         assert len(result) == 2
         assert all(isinstance(w, AgentWeight) for w in result)
 

@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(claude *)"
+      "Bash(claude *)",
+      "Bash(python3 *)",
+      "Bash(sed *)",
+      "Bash(mv *)",
+      "Bash(chmod *)",
+      "Bash(timeout *)"
     ]
-  }
+  },
+  "$version": 4
 }

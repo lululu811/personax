@@ -48,15 +48,22 @@ class RewardEngine:
             else:
                 rep_score = 1.0
 
-            # If query tags provided, blend with tag-specific scores
+            # If query tags provided, blend with tag-specific scores (weighted by sample count)
             if query_tags:
                 tag_scores = []
+                tag_samples = 0
                 for tag in query_tags:
                     rep = self.store.get_agent_reputation(name, tag=tag)
                     if rep and rep["sample_count"] > 0:
-                        tag_scores.append(_map_score_to_reputation(rep["avg_score"]))
-                if tag_scores:
-                    rep_score = sum(tag_scores) / len(tag_scores)
+                        tag_scores.append(_map_score_to_reputation(rep["avg_score"]) * rep["sample_count"])
+                        tag_samples += rep["sample_count"]
+                if tag_scores and tag_samples > 0:
+                    if global_rep and global_rep["sample_count"] > 0:
+                        global_weighted = _map_score_to_reputation(global_rep["avg_score"]) * global_rep["sample_count"]
+                        total_samples = global_rep["sample_count"] + tag_samples
+                        rep_score = (global_weighted + sum(tag_scores)) / total_samples
+                    else:
+                        rep_score = sum(tag_scores) / tag_samples
 
             weights[name] = AgentWeight(
                 agent_name=name,

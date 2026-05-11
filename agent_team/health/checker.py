@@ -93,7 +93,9 @@ class AgentCircuitBreaker:
     def record_failure(self):
         self.failure_count += 1
         self.last_failure_time = time.time()
-        if self.failure_count >= self.FAILURE_THRESHOLD:
+        if self.state == "half_open":
+            self.state = "open"
+        elif self.failure_count >= self.FAILURE_THRESHOLD:
             self.state = "open"
 
     def record_success(self):
