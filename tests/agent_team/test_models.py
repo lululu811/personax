@@ -8,6 +8,17 @@ from agent_team.core.models import (
 )
 
 
+def test_team_result_has_poster_paths():
+    result = TeamResult(
+        rounds=[],
+        final_scores={"zettaranc": 5.0},
+        poster_text="test",
+        session_id="sess_abc",
+        poster_paths=["/tmp/poster1.png"],
+    )
+    assert result.poster_paths == ["/tmp/poster1.png"]
+
+
 def test_thought_creation():
     t = Thought(
         agent_name="zettaranc",

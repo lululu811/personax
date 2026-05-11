@@ -76,6 +76,7 @@ class TeamResult:
     final_scores: Optional[dict[str, float]] = None
     poster_text: Optional[str] = None
     session_id: Optional[str] = None
+    poster_paths: list[str] = field(default_factory=list)
 
 
 @dataclass
