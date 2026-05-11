@@ -38,7 +38,8 @@ async def test_generate_single_success(sample_result, sample_style, tmp_path):
 
     with patch("agent_team.poster.generator.asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec:
         mock_proc = AsyncMock()
-        mock_proc.wait = AsyncMock(return_value=0)
+        mock_proc.returncode = 0
+        mock_proc.communicate = AsyncMock(return_value=(b"", b""))
         mock_exec.return_value = mock_proc
 
         result = await gen._generate_single(sample_result, sample_style, tmp_path / "sess_test")
@@ -57,12 +58,14 @@ async def test_generate_parallel_mixed_results(sample_result, tmp_path):
             call_count += 1
             proc = AsyncMock()
             if call_count == 1:
-                proc.wait = AsyncMock(return_value=0)
+                proc.returncode = 0
+                proc.communicate = AsyncMock(return_value=(b"", b""))
                 # Create a fake png
                 (tmp_path / "sess_test" / "infographic-tech").mkdir(parents=True, exist_ok=True)
                 (tmp_path / "sess_test" / "infographic-tech" / "infographic.png").write_text("")
             else:
-                proc.wait = AsyncMock(return_value=1)
+                proc.returncode = 1
+                proc.communicate = AsyncMock(return_value=(b"", b"error"))
             return proc
 
         mock_exec.side_effect = side_effect

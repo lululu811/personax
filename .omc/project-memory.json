@@ -262,21 +262,69 @@
       "type": "file"
     },
     {
+      "path": "agent_team/core/models.py",
+      "accessCount": 13,
+      "lastAccessed": 1778518412347,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/cli.py",
+      "accessCount": 9,
+      "lastAccessed": 1778518470166,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/poster/test_generator.py",
+      "accessCount": 8,
+      "lastAccessed": 1778518488915,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/poster/formatter.py",
+      "accessCount": 7,
+      "lastAccessed": 1778518412298,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/poster/generator.py",
+      "accessCount": 7,
+      "lastAccessed": 1778518470000,
+      "type": "file"
+    },
+    {
       "path": "tests/agent_team/test_agent.py",
       "accessCount": 6,
       "lastAccessed": 1778515313342,
       "type": "file"
     },
     {
-      "path": "agent_team/core/models.py",
-      "accessCount": 5,
-      "lastAccessed": 1778515295205,
+      "path": "agent_team/core/session.py",
+      "accessCount": 6,
+      "lastAccessed": 1778518256927,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_models.py",
+      "accessCount": 6,
+      "lastAccessed": 1778518498036,
       "type": "file"
     },
     {
       "path": "tests/agent_team/test_reward_engine.py",
       "accessCount": 5,
       "lastAccessed": 1778515563981,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/poster/styles.py",
+      "accessCount": 5,
+      "lastAccessed": 1778518412126,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/test_cli_poster_flow.py",
+      "accessCount": 5,
+      "lastAccessed": 1778518511185,
       "type": "file"
     },
     {
@@ -304,15 +352,15 @@
       "type": "file"
     },
     {
-      "path": "agent_team/core/session.py",
-      "accessCount": 4,
-      "lastAccessed": 1778515520955,
-      "type": "file"
-    },
-    {
       "path": "agent_team/core/reward.py",
       "accessCount": 4,
       "lastAccessed": 1778515537643,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/poster/test_formatter.py",
+      "accessCount": 4,
+      "lastAccessed": 1778518423119,
       "type": "file"
     },
     {
@@ -346,6 +394,12 @@
       "type": "file"
     },
     {
+      "path": "tests/agent_team/test_cli.py",
+      "accessCount": 3,
+      "lastAccessed": 1778518423195,
+      "type": "file"
+    },
+    {
       "path": "agent_team/modes/base.py",
       "accessCount": 2,
       "lastAccessed": 1778515295049,
@@ -361,12 +415,6 @@
       "path": "agent_team/modes/debate.py",
       "accessCount": 2,
       "lastAccessed": 1778515295297,
-      "type": "file"
-    },
-    {
-      "path": "agent_team/cli.py",
-      "accessCount": 2,
-      "lastAccessed": 1778515295453,
       "type": "file"
     },
     {
@@ -430,21 +478,21 @@
       "type": "file"
     },
     {
-      "path": "tests/agent_team/test_models.py",
-      "accessCount": 2,
-      "lastAccessed": 1778515313516,
-      "type": "file"
-    },
-    {
-      "path": "tests/agent_team/test_cli.py",
-      "accessCount": 2,
-      "lastAccessed": 1778515313581,
-      "type": "file"
-    },
-    {
       "path": "tests/agent_team/test_reward.py",
       "accessCount": 2,
       "lastAccessed": 1778515313588,
+      "type": "file"
+    },
+    {
+      "path": "agent_team/poster/__init__.py",
+      "accessCount": 2,
+      "lastAccessed": 1778518412183,
+      "type": "file"
+    },
+    {
+      "path": "tests/agent_team/poster/test_styles.py",
+      "accessCount": 2,
+      "lastAccessed": 1778518423247,
       "type": "file"
     },
     {
@@ -481,6 +529,24 @@
       "path": "tests/agent_team/__init__.py",
       "accessCount": 1,
       "lastAccessed": 1778513680540,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-05-12-poster-generation-design.md",
+      "accessCount": 1,
+      "lastAccessed": 1778516647201,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-05-12-poster-generation-implementation.md",
+      "accessCount": 1,
+      "lastAccessed": 1778517445082,
+      "type": "file"
+    },
+    {
+      "path": "pyproject.toml",
+      "accessCount": 1,
+      "lastAccessed": 1778517880656,
       "type": "file"
     }
   ],

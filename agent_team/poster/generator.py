@@ -1,5 +1,4 @@
 import asyncio
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -63,6 +62,7 @@ class PosterGenerator:
 
         cmd = ["claude", "skill", style.skill_name, str(source_path), *style.args]
 
+        proc = None
         try:
             proc = await asyncio.create_subprocess_exec(
                 *cmd,

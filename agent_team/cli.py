@@ -176,6 +176,7 @@ async def _generate_posters(result):
         click.echo(f"  ✗ {e.style_id}: {e.error}")
 
     if output.files:
+        result.poster_paths = [str(f.path) for f in output.files]
         click.echo(f"\n海报保存在: {output.output_dir}")
 
 

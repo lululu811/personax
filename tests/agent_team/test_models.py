@@ -19,6 +19,11 @@ def test_team_result_has_poster_paths():
     assert result.poster_paths == ["/tmp/poster1.png"]
 
 
+def test_team_result_poster_paths_default():
+    result = TeamResult(rounds=[])
+    assert result.poster_paths == []
+
+
 def test_thought_creation():
     t = Thought(
         agent_name="zettaranc",
