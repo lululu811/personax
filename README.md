@@ -26,6 +26,9 @@ PersonaX 是一个**三层解耦**的 AI Agent 框架，将量化计算工具、
 - **知识库向量检索**：基于 ChromaDB + 通义千问 Embedding，支持 Markdown 知识库自动同步
 - **多 LLM 后端**：DashScope / MiniMax / Kimi / Bailian / Anthropic 一键切换
 - **工具缓存与信号聚合**：避免重复计算，多角色信号冲突自动消解
+- **Agent Team 团队头脑风暴**：多人格并行/辩论分析，主持人汇总共识
+- **动态权重评分**：用户评分反馈驱动 Agent 权重调整，带探索机制
+- **多风格海报生成**：像素风/专业信息图/知识卡片，baoyu 技能驱动
 
 ---
 
@@ -71,6 +74,7 @@ PersonaX 是一个**三层解耦**的 AI Agent 框架，将量化计算工具、
 |------|------|------|--------|
 | **Tools** | `tools/quant/technical/` `tools/financial_reports/` | 纯计算，无状态，输入 DataFrame 输出 ToolResult | `KDJTool`, `MACDTool`, `FinancialReportTool` |
 | **Orchestration** | `orchestration/` | 路由、缓存、聚合、对话状态、LLM 调用 | `OrchestrationEngine`, `ConversationManager`, `ResponseGenerator` |
+| **Agent Team** | `agent_team/` | 多人格协作、健康检查、海报生成 | `TeamSession`, `PosterGenerator`, `RewardEngine` |
 | **Personas** | `personas/{name}/` | 人格配置、策略集、表达 DNA | `personality.md`, `overrides.yaml`, `strategies/` |
 
 ---
@@ -103,7 +107,7 @@ export DASHSCOPE_API_KEY="your-key"  # 用于 text-embedding-v4
 
 ```bash
 python3 -m pytest tests/ -v
-# 114 passed, 3 skipped
+# 54 passed (agent_team)
 ```
 
 ### 基本用法 —— 技术面分析（Zettaranc）
@@ -177,6 +181,57 @@ resp3 = engine.execute(OrchestrationRequest(
 print(resp3.persona_analysis)  # 最终诊断意见
 ```
 
+### Agent Team 团队头脑风暴
+
+```bash
+# 全明星团队并行分析（默认）
+python -m agent_team.cli brainstorm --query "看看茅台" --template 全明星
+
+# 技术派辩论模式
+python -m agent_team.cli brainstorm --query "宁德时代能买吗" --template 技术派 --mode debate
+
+# 自定义 Agent 组合
+python -m agent_team.cli brainstorm --query "黄金走势" --agents zettaranc,boss_mo
+```
+
+交互流程：
+1. 组建团队 → 并行/辩论分析 → 主持人汇总共识
+2. 选择 Agent 深入讨论（可选，最多 3 轮）
+3. 为 Agent 打分（1-5 星）
+4. 确认生成海报 → 3 种风格并行输出到 `~/.personax/posters/`
+
+```
+组建团队: zettaranc, fupeng, boss_mo, financial_analyst (模式: parallel)
+--------------------------------------------------
+
+第 1 轮分析结果:
+
+  【zettaranc】
+     月线四块砖翻红，周线B1...
+     置信度: 85%
+
+  【boss_mo】
+     次高已现，分水未突破...
+     置信度: 60%
+
+主持人汇总:
+   共识: 技术面偏多，但需确认放量
+   建议: 关注回调机会，分批建仓
+
+请为参与的 Agent 打分 (1-5星，回车跳过):
+  zettaranc: 5
+  boss_mo: 4
+
+是否生成海报？ [y/N]: y
+生成海报中...（3种风格并行）
+
+  ✓ 像素风高密度信息图: ~/.personax/posters/sess_abc123/infographic-tech/infographic.png
+  ✓ 专业手作风格信息图: ~/.personax/posters/sess_abc123/infographic-pro/infographic.png
+  ✓ 知识卡片系列: ~/.personax/posters/sess_abc123/image-cards/01-cover-xxx.png
+
+海报保存在: ~/.personax/posters/sess_abc123
+```
+
 ---
 
 ## 项目结构
@@ -227,11 +282,20 @@ personax/
 │   ├── sync.py              # 多源同步引擎
 │   └── sources/             # Tushare 等数据源适配
 │
-├── tests/                   # 测试（114 项）
+├── agent_team/              # Agent 团队 — 头脑风暴与海报
+│   ├── cli.py               # CLI 入口
+│   ├── core/                # Agent / Team / Session / Moderator / Reward
+│   ├── poster/              # 海报生成
+│   ├── modes/               # parallel / debate
+│   ├── health/              # 健康检查与熔断器
+│   └── persistence/         # 反馈持久化
+│
+└── tests/                   # 测试
 │   ├── test_orchestration/  # 对话 / 响应生成 / 引擎集成
 │   ├── test_quant/          # 指标 / 注册表
 │   ├── test_knowledge/      # 分块 / Embedding / 检索
 │   ├── test_data/           # 数据库 / 同步
+│   ├── agent_team/          # Agent Team 测试（54 项）
 │   └── test_architecture_integration.py
 │
 └── scripts/                 # 运维脚本
@@ -348,10 +412,13 @@ personax/
 - [x] 财报分析工具（FinancialReportTool）
 - [x] 付鹏宏观角色 + 3 种宏观策略（哑铃/爆金币/缩圈）
 - [x] BOSS墨交易角色 + 2 种交易策略（节奏/盈亏比）
+- [x] Agent Team 团队头脑风暴（并行/辩论/海报生成）
+- [x] 动态权重评分 + 用户反馈系统
+- [x] 多风格海报生成（像素风/信息图/知识卡片）
 - [ ] 对话状态持久化（SQLite/DuckDB）
 - [ ] 基于 LLM 的意图分类路由
-- [ ] Web UI / API Server
 - [ ] 更多人格角色（芒格、Naval 等）
+- [ ] 海报风格自定义与扩展
 
 ---
 

@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `agent_team/` — Agent 团队头脑风暴框架
+  - `core/` — `Agent`, `Team`, `Moderator`, `TeamSession`, `RewardEngine`
+  - `modes/` — `ParallelExecutor`（并行分析）与 `DebateExecutor`（辩论模式）
+  - `health/` — `AgentHealthChecker`（输出质量检查）与 `AgentCircuitBreaker`（熔断器）
+  - `persistence/` — `FeedbackStore`（SQLite 反馈与声誉持久化）
+  - `poster/` — 多风格海报生成模块
+    - `styles.py` — `PosterStyle` 注册表，3 种默认风格（像素信息图/专业信息图/知识卡片）
+    - `formatter.py` — `InfographicFormatter` + `ImageCardsFormatter`
+    - `generator.py` — `PosterGenerator`，并行调用 baoyu 技能生成海报
+  - `cli.py` — Click CLI：`brainstorm` 命令 + 交互式 deep-dive + 海报确认
+- `agent_team/core/models.py` — `TeamResult.poster_paths` 字段
+- `tests/agent_team/` — 54 个 pytest 测试覆盖 Agent Team 全部功能
 - `personas/fupeng/` — 付鹏宏观人格（`personality.md` + `SKILL.md` + `overrides.yaml`）
 - `personas/fupeng/strategies/` — 3 种付鹏宏观策略：
   - `dumbbell.py` — 哑铃配置（防御端/进攻端/中间地带）

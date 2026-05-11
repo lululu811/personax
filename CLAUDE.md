@@ -49,6 +49,13 @@ query → Router → [Knowledge Query | Tool Cache | Data Sync] → Strategies �
 │   ├── response_generator.py  # LLM 生成
 │   ├── conversation.py    # 多轮对话状态
 │   └── ...
+├── agent_team/            # Agent 团队 — 多人格头脑风暴与海报生成
+│   ├── cli.py             # CLI 入口（brainstorm / deep-dive）
+│   ├── core/              # 核心：Agent / Team / Session / Moderator / Reward
+│   ├── poster/            # 海报生成（formatter / generator / styles）
+│   ├── modes/             # 协作模式：parallel / debate
+│   ├── health/            # 健康检查与熔断器
+│   └── persistence/       # 反馈持久化（SQLite）
 ├── tools/                 # 工具层
 │   ├── quant/technical/   # 技术指标（B1/B2/六脉神剑等）
 │   └── financial_reports/ # 财报分析（五维排雷法、杜邦分析、估值）
@@ -70,6 +77,23 @@ query → Router → [Knowledge Query | Tool Cache | Data Sync] → Strategies �
 └── tests/                 # 测试
 ```
 
+## Agent Team CLI
+
+团队头脑风暴入口，支持多人格并行分析与海报生成：
+
+```bash
+# 全明星团队并行分析
+python -m agent_team.cli brainstorm --query "看看茅台" --template 全明星
+
+# 技术派辩论模式
+python -m agent_team.cli brainstorm --query "宁德时代能买吗" --template 技术派 --mode debate
+
+# 自定义 Agent 组合
+python -m agent_team.cli brainstorm --query "黄金走势" --agents zettaranc,boss_mo
+```
+
+交互流程：分析 → 评分 → 生成海报（y/n 确认）→ 输出到 `~/.personax/posters/`
+
 ## 开发规范
 
 - **新增 persona**: 在 `personas/{name}/` 下创建 personality.md + SKILL.md + strategies/ + overrides.yaml
@@ -77,6 +101,7 @@ query → Router → [Knowledge Query | Tool Cache | Data Sync] → Strategies �
 - **新增策略**: 继承 `BaseStrategy`，实现 `analyze(df) -> StrategySignal`
 - **新增工具**: 实现 `run(query, df) -> ToolResult`，注册到 `registry/tools.yaml`
 - **新增 wiki**: 配置 `registry/wiki.yaml` 或环境变量 `WIKI_*_DIRS`
+- **新增海报风格**: 在 `agent_team/poster/styles.py` 的 `DEFAULT_STYLES` 中添加 `PosterStyle`
 
 ## 环境变量
 
