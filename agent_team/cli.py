@@ -150,8 +150,33 @@ def _do_scoring(session: TeamSession):
         result = session.close(scores)
         click.echo("\n最终报告:")
         click.echo(result.poster_text)
+
+        if click.confirm("\n是否生成海报？", default=False):
+            asyncio.run(_generate_posters(result))
     else:
         session.status = SessionStatus.CLOSED
+
+
+async def _generate_posters(result):
+    from agent_team.poster.generator import PosterGenerator, DEFAULT_STYLES
+
+    generator = PosterGenerator()
+    missing = generator._check_prerequisites()
+    if missing:
+        click.echo(f"! 缺少技能: {', '.join(missing)}")
+        click.echo("  安装: claude skill install baoyu-infographic baoyu-image-cards")
+        return
+
+    click.echo("生成海报中...（3种风格并行）\n")
+    output = await generator.generate(result, styles=DEFAULT_STYLES)
+
+    for f in output.files:
+        click.echo(f"  ✓ {f.description}: {f.path}")
+    for e in output.errors:
+        click.echo(f"  ✗ {e.style_id}: {e.error}")
+
+    if output.files:
+        click.echo(f"\n海报保存在: {output.output_dir}")
 
 
 if __name__ == "__main__":
