@@ -27,6 +27,7 @@ from tools.financial_reports import FinancialReportTool
 from orchestration.signals.v2 import SignalV2, SignalAction, SignalPool
 from orchestration.signals.aggregator import Aggregator, ConflictHandler as NewConflictHandler, AggregatedResult
 from orchestration.memory import ContextMemory
+from orchestration.review.event_bus import emit as emit_signal_event
 
 
 @dataclass
@@ -188,6 +189,25 @@ class OrchestrationEngine:
         # Step 6: Aggregate signals
         self.signal_aggregator.strategy = request.conflict_strategy
         aggregated = self.signal_aggregator.aggregate(persona_signals)
+
+        # Emit signal events (non-blocking)
+        if aggregated.persona_signals:
+            from orchestration.review.models import SignalEvent
+            from orchestration.signals.v2 import SignalAction as V2SignalAction
+            from datetime import datetime
+            for signal in aggregated.persona_signals:
+                action = V2SignalAction.BUY if signal.action == "buy" else V2SignalAction.SELL if signal.action == "sell" else V2SignalAction.HOLD
+                event = SignalEvent(
+                    timestamp=datetime.now(),
+                    source=signal.persona,
+                    action=action,
+                    confidence=signal.confidence,
+                    reason=signal.reason,
+                    price=0.0,
+                    asset=request.stock_code or "",
+                    tags=[],
+                )
+                emit_signal_event("signal", event)
 
         # Step 7: Load persona config and generate persona-aware response
         try:
@@ -781,6 +801,25 @@ class OrchestrationEngine:
         persona_signals = self._build_persona_signals(strategy_results, request.persona_priority)
         self.signal_aggregator.strategy = request.conflict_strategy
         aggregated = self.signal_aggregator.aggregate(persona_signals)
+
+        # Emit signal events (non-blocking)
+        if aggregated.persona_signals:
+            from orchestration.review.models import SignalEvent
+            from orchestration.signals.v2 import SignalAction as V2SignalAction
+            from datetime import datetime
+            for signal in aggregated.persona_signals:
+                action = V2SignalAction.BUY if signal.action == "buy" else V2SignalAction.SELL if signal.action == "sell" else V2SignalAction.HOLD
+                event = SignalEvent(
+                    timestamp=datetime.now(),
+                    source=signal.persona,
+                    action=action,
+                    confidence=signal.confidence,
+                    reason=signal.reason,
+                    price=0.0,
+                    asset=request.stock_code or "",
+                    tags=[],
+                )
+                emit_signal_event("signal", event)
 
         # Knowledge query
         knowledge_snippets = self._query_knowledge(request.query, route.primary, include_wiki=False) if request.include_knowledge else []
