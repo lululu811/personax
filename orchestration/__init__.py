@@ -12,7 +12,8 @@ Core components:
 
 from orchestration.router import Router
 from orchestration.tool_cache import ToolCache
-from orchestration.signal_aggregator import SignalAggregator
+# Legacy - kept for backward compatibility during migration
+from orchestration.legacy.signal_aggregator import SignalAggregator
 from orchestration.engine import OrchestrationEngine, OrchestrationRequest, OrchestrationResponse
 from orchestration.response_generator import ResponseGenerator, GenerationContext
 from orchestration.conversation import ConversationManager, ConversationState, DiagnosisEngine

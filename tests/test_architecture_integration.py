@@ -219,7 +219,7 @@ class TestOrchestrationLayer:
     def test_signal_aggregator(self):
         """Test signal aggregation."""
         from orchestration import SignalAggregator
-        from orchestration.signal_aggregator import PersonaSignal, ConflictStrategy
+        from orchestration.legacy.signal_aggregator import PersonaSignal, ConflictStrategy
 
         aggregator = SignalAggregator(strategy=ConflictStrategy.CONFIDENCE_WEIGHTED)
 

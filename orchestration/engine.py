@@ -7,7 +7,8 @@ import pandas as pd
 
 from orchestration.router import Router, RouteResult
 from orchestration.tool_cache import ToolCache
-from orchestration.signal_aggregator import (
+# Legacy imports - kept for backward compatibility
+from orchestration.legacy.signal_aggregator import (
     SignalAggregator,
     ConflictStrategy,
     PersonaSignal,
@@ -21,6 +22,11 @@ from tools.quant.technical import QUERY_TOOLS as _DEFAULT_QUERY_TOOLS
 from tools.quant.technical.interface import get_tool as _get_tool
 from tools.quant.technical.interface import list_tools as _list_tools
 from tools.financial_reports import FinancialReportTool
+
+# New signal and memory modules
+from orchestration.signals.v2 import SignalV2, SignalAction, SignalPool
+from orchestration.signals.aggregator import Aggregator, ConflictHandler as NewConflictHandler, AggregatedResult
+from orchestration.memory import ContextMemory
 
 
 @dataclass
@@ -110,6 +116,7 @@ class OrchestrationEngine:
         self.signal_aggregator = SignalAggregator()
         self.response_generator = ResponseGenerator()
         self.conversation_manager = ConversationManager()
+        self.memory = ContextMemory()  # New memory module for conversation persistence
         self._strategy_cache = {}  # strategy_name -> strategy instance
         self._wiki_query = None  # Lazy-init WikiKnowledgeQuery singleton
 

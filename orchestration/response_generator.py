@@ -35,13 +35,15 @@ from typing import Any, Optional
 
 from personas.persona_loader import PersonaConfig
 
-# Provider configuration: model_default, model_env, key_env, url_env
+# Provider configuration: each provider has its own dedicated env vars
 _PROVIDER_CONFIG = {
-    "minimax": {"model": "MiniMax-M2.7-highspeed", "model_env": "ANTHROPIC_MODEL", "key_env": ["ANTHROPIC_AUTH_TOKEN", "LLM_API_KEY"], "url_env": ["ANTHROPIC_BASE_URL", "LLM_BASE_URL"]},
-    "kimi": {"model": "kimi-for-coding", "model_env": "ANTHROPIC_DEFAULT_OPUS_MODEL", "key_env": ["ANTHROPIC_API_KEY", "LLM_API_KEY"], "url_env": ["ANTHROPIC_BASE_URL", "LLM_BASE_URL"]},
-    "bailian": {"model": "qwen3.6-plus", "model_env": "ANTHROPIC_DEFAULT_HAIKU_MODEL", "key_env": ["ANTHROPIC_AUTH_TOKEN", "LLM_API_KEY"], "url_env": ["ANTHROPIC_BASE_URL", "LLM_BASE_URL"]},
-    "anthropic": {"model": "claude-3-sonnet-20240229", "model_env": "ANTHROPIC_MODEL", "key_env": ["ANTHROPIC_AUTH_TOKEN", "LLM_API_KEY"], "url_env": ["ANTHROPIC_BASE_URL", "LLM_BASE_URL"]},
-    "dashscope": {"model": "qwen-plus", "model_env": "LLM_MODEL", "key_env": ["LLM_API_KEY", "DASHSCOPE_API_KEY"], "url_env": ["LLM_BASE_URL"]},
+    "kimi": {"model": "kimi-for-coding", "key_env": "KIMI_API_KEY", "url_env": "KIMI_BASE_URL", "model_env": "KIMI_MODEL"},
+    "minimax": {"model": "MiniMax-M2.7-highspeed", "key_env": "MINIMAX_API_KEY", "url_env": "MINIMAX_BASE_URL", "model_env": "MINIMAX_MODEL"},
+    "bailian": {"model": "qwen3.6-plus", "key_env": "BAILIAN_API_KEY", "url_env": "BAILIAN_BASE_URL", "model_env": "BAILIAN_MODEL"},
+    "mimo": {"model": "mimo-model", "key_env": "MIMO_API_KEY", "url_env": "MIMO_BASE_URL", "model_env": "MIMO_MODEL"},
+    "anthropic": {"model": "claude-3-sonnet-20240229", "key_env": "ANTHROPIC_API_KEY", "url_env": "ANTHROPIC_BASE_URL", "model_env": "ANTHROPIC_MODEL"},
+    "dashscope": {"model": "qwen-plus", "key_env": "DASHSCOPE_API_KEY", "url_env": "DASHSCOPE_BASE_URL", "model_env": "DASHSCOPE_MODEL"},
+    "openai": {"model": "gpt-4o", "key_env": "OPENAI_API_KEY", "url_env": "OPENAI_BASE_URL", "model_env": "OPENAI_MODEL"},
 }
 
 
@@ -81,9 +83,9 @@ class ResponseGenerator:
         self.provider = (provider or os.environ.get("LLM_PROVIDER", "dashscope")).lower()
 
         cfg = _PROVIDER_CONFIG.get(self.provider, _PROVIDER_CONFIG["dashscope"])
-        self.model = model or os.environ.get(cfg["model_env"]) or os.environ.get("LLM_MODEL", cfg["model"])
-        self._api_key = api_key or next((os.environ.get(k) for k in cfg["key_env"] if os.environ.get(k)), None)
-        self._base_url = base_url or next((os.environ.get(k) for k in cfg["url_env"] if os.environ.get(k)), None)
+        self.model = model or os.environ.get(cfg["model_env"]) or cfg["model"]
+        self._api_key = api_key or os.environ.get(cfg["key_env"])
+        self._base_url = base_url or os.environ.get(cfg["url_env"])
 
         self._client = None
         self._init_client()
@@ -119,7 +121,7 @@ class ResponseGenerator:
         if not self._api_key:
             return False
         # Anthropic-protocol providers use httpx directly, no pre-init client needed
-        if self.provider in ("minimax", "anthropic", "kimi", "bailian"):
+        if self.provider in ("minimax", "anthropic", "kimi", "bailian", "mimo", "openai"):
             return True
         return self._client is not None and self._api_key is not None
 
@@ -364,7 +366,7 @@ class ResponseGenerator:
         try:
             if self.provider == "dashscope":
                 return self._call_dashscope(messages)
-            elif self.provider in ("minimax", "anthropic", "kimi", "bailian"):
+            elif self.provider in ("minimax", "anthropic", "kimi", "bailian", "mimo", "openai"):
                 return self._call_anthropic(messages)
             elif self.provider == "openai":
                 return self._call_openai(messages)
@@ -403,7 +405,7 @@ class ResponseGenerator:
             model=self.model,
             messages=dashscope_messages,
             result_format="message",
-            max_tokens=1500,
+            max_tokens=16000,
             temperature=0.7,
         )
         if response.status_code == 200:
@@ -439,7 +441,7 @@ class ResponseGenerator:
         response = self._client.chat.completions.create(
             model=self.model,
             messages=openai_messages,
-            max_tokens=1500,
+            max_tokens=16000,
             temperature=0.7,
         )
         return response.choices[0].message.content
@@ -463,13 +465,13 @@ class ResponseGenerator:
         }
         payload = {
             "model": self.model,
-            "max_tokens": 1500,
+            "max_tokens": 16000,
             "messages": anthropic_messages,
         }
         if system_prompt:
             payload["system"] = system_prompt
 
-        with httpx.Client(timeout=60.0) as client:
+        with httpx.Client(timeout=180.0) as client:
             response = client.post(url, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
