@@ -104,34 +104,48 @@ class ConversationContext:
 - 新闻舆情：东方财富、新浪财经
 - 宏观数据：Wind API / 公开指标
 
+## 实施策略：**直接重构（方案二）**
+
+采用全新重写方案，不维护旧代码的向后兼容。
+
+理由：
+- B1-B5 全做，渐进式迁移成本高
+- 干净实现，无历史包袱
+- 旧代码备份分支确认无误后删除
+
 ## 实施计划
 
 ### Phase 1: SignalV2 + SignalPool
-- 新建 `orchestration/signals.py`
-- 定义 SignalV2 dataclass
+- 新建 `orchestration/signals/v2.py`
+- 定义 SignalV2 dataclass + SignalAction 枚举
 - 实现 SignalPool 收集器
-- 迁移现有策略输出到 SignalV2 格式
+- 迁移所有策略输出到 SignalV2 格式
 
 ### Phase 2: Aggregator 重构
-- 新建 `orchestration/aggregator.py`
-- 实现聚合规则和冲突处理
-- 保持向后兼容（适配现有接口）
+- 新建 `orchestration/signals/aggregator.py`
+- 实现聚合规则和冲突处理策略
+- 实现 AggregatedResult 输出格式
 
 ### Phase 3: ContextMemory
 - 新建 `orchestration/memory.py`
-- 实现对话状态管理
-- SQLite 持久化
+- 实现 ConversationContext 对话状态
+- SQLite 持久化偏好学习
 
-### Phase 4: 策略扩展 + 数据源
+### Phase 4: OrchestrationEngine 集成
+- 重构 `orchestration/engine.py` 使用新信号模块
+- 更新 ResponseGenerator 支持新格式
+- 移除旧版 signal_aggregator.py
+
+### Phase 5: 策略扩展 + 数据源
 - 扩展技术指标库
 - 接入新闻/舆情数据
 - persona 策略配置增强
 
 ## 兼容性
 
-- 保持 `OrchestrationEngine` 接口不变
-- 新模块通过组合方式集成
-- Feature Flag 控制高级功能开关
+- 全新接口，不维护向后兼容
+- 旧代码保留在 `orchestration/legacy/` 确认无误后删除
+- OrchestrationEngine 对外接口保持稳定
 
 ## 测试策略
 
