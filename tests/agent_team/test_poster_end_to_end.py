@@ -67,17 +67,17 @@ class TestPosterEndToEnd:
                     proc = AsyncMock()
                     proc.returncode = 0
                     proc.communicate = AsyncMock(return_value=(b"", b""))
-                    # Create fake PNGs for each style
+                    # Create fake PNGs for each style - must match generator's expected filename: report.png
                     style_dir = tmp_path / "e2e_test_001"
                     if call_count == 1:
                         (style_dir / "infographic-tech").mkdir(parents=True, exist_ok=True)
-                        (style_dir / "infographic-tech" / "infographic.png").write_text("")
+                        (style_dir / "infographic-tech" / "report.png").write_text("")
                     elif call_count == 2:
                         (style_dir / "infographic-pro").mkdir(parents=True, exist_ok=True)
-                        (style_dir / "infographic-pro" / "infographic.png").write_text("")
+                        (style_dir / "infographic-pro" / "report.png").write_text("")
                     else:
                         (style_dir / "image-cards").mkdir(parents=True, exist_ok=True)
-                        (style_dir / "image-cards" / "01-cover-test.png").write_text("")
+                        (style_dir / "image-cards" / "report.png").write_text("")
                     return proc
 
                 mock_exec.side_effect = side_effect
@@ -87,8 +87,8 @@ class TestPosterEndToEnd:
                 # Verify all 3 styles were attempted
                 assert call_count == 3
 
-                # Verify successful generations
-                assert len(output.files) == 3
+                # Verify successful generations (4 styles: 3 baoyu + 1 html which always succeeds)
+                assert len(output.files) == 4
                 assert len(output.errors) == 0
 
                 # Verify file paths exist
@@ -97,8 +97,8 @@ class TestPosterEndToEnd:
 
                 # Step 4: Populate poster_paths (as CLI does)
                 result.poster_paths = [str(f.path) for f in output.files]
-                assert len(result.poster_paths) == 3
-                assert all(".png" in p for p in result.poster_paths)
+                assert len(result.poster_paths) == 4  # 3 baoyu styles + 1 html
+                assert all(".png" in p or ".html" in p for p in result.poster_paths)
 
     @pytest.mark.asyncio
     async def test_poster_generation_with_missing_skills(self, tmp_path):
@@ -130,11 +130,11 @@ class TestPosterEndToEnd:
                 call_count += 1
                 proc = AsyncMock()
                 if call_count == 1:
-                    # First style succeeds
+                    # First style succeeds - must use report.png to match generator expectation
                     proc.returncode = 0
                     proc.communicate = AsyncMock(return_value=(b"", b""))
                     (tmp_path / "partial_test" / "infographic-tech").mkdir(parents=True, exist_ok=True)
-                    (tmp_path / "partial_test" / "infographic-tech" / "infographic.png").write_text("")
+                    (tmp_path / "partial_test" / "infographic-tech" / "report.png").write_text("")
                 else:
                     # Others fail
                     proc.returncode = 1
@@ -145,9 +145,11 @@ class TestPosterEndToEnd:
 
             output = await generator.generate(result)
 
-            assert len(output.files) == 1
+            # infographic-tech succeeds, html-modern always succeeds, others fail
+            assert len(output.files) == 2
             assert len(output.errors) == 2
             assert output.files[0].style_id == "infographic-tech"
+            assert output.files[1].style_id == "html-modern"
 
     def test_formatter_output_structure(self):
         """Verify formatter produces valid markdown structure."""
