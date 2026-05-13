@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **SignalV2 聚合框架** (`orchestration/signals/`)
+  - `v2.py` — SignalV2 dataclass + SignalAction 枚举 + SignalPool 收集器
+  - `aggregator.py` — Aggregator 智能聚合引擎，支持 4 种冲突处理策略：
+    - `RECENT_WINS` — 近期信号优先
+    - `HIGH_CONFIDENCE_WINS` — 高置信度优先
+    - `WEIGHTED_VOTING` — 加权投票
+    - `DEBATE_MODE` — 辩论模式（冲突时返回 HOLD）
+- **ContextMemory** (`orchestration/memory.py`) — SQLite 持久化的多轮对话上下文与偏好学习
+- **Signal Review System** (`orchestration/review/`)
+  - `event_bus.py` — Fire & Forget 事件总线，异步非阻塞
+  - `signal_history.py` — 信号历史 SQLite 存储
+  - `evaluator.py` — BUY/SELL 信号对错评估
+  - `weight_adjuster.py` — 根据历史准确率动态调整指标权重
+  - `review_service.py` — 每周/每月回顾服务
+  - `cli.py` — CLI：`python -m orchestration.review.cli [weekly|monthly]`
+- **Engine 集成** — 每次分析后自动发射信号事件到 EventBus，异步存储到 SQLite
+- **技术指标适配器** (`tools/quant/technical/signal_v2_adapters.py`) — 现有指标转 SignalV2 格式
 - `agent_team/` — Agent 团队头脑风暴框架
   - `core/` — `Agent`, `Team`, `Moderator`, `TeamSession`, `RewardEngine`
   - `modes/` — `ParallelExecutor`（并行分析）与 `DebateExecutor`（辩论模式）

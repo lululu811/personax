@@ -3,7 +3,7 @@
 > 人格化 AI Agent 投资分析系统 —— 让量化工具拥有「灵魂」
 
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue)](https://python.org)
-[![Tests](https://img.shields.io/badge/tests-114%20passed-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-305+%20passed-brightgreen)]()
 [![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-orange.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 PersonaX 是一个**三层解耦**的 AI Agent 框架，将量化计算工具、编排引擎与人格化角色完全分离。你可以像搭积木一样为不同的投资大师（Zettaranc、Financial Analyst 等）配置专属的策略体系、知识库与语言风格，由 LLM 统一融合生成带有人格语气的自然语言回答。
@@ -73,7 +73,7 @@ PersonaX 是一个**三层解耦**的 AI Agent 框架，将量化计算工具、
 | 层级 | 目录 | 职责 | 核心类 |
 |------|------|------|--------|
 | **Tools** | `tools/quant/technical/` `tools/financial_reports/` | 纯计算，无状态，输入 DataFrame 输出 ToolResult | `KDJTool`, `MACDTool`, `FinancialReportTool` |
-| **Orchestration** | `orchestration/` | 路由、缓存、聚合、对话状态、LLM 调用 | `OrchestrationEngine`, `ConversationManager`, `ResponseGenerator` |
+| **Orchestration** | `orchestration/` | 路由、缓存、聚合、对话状态、LLM 调用 | `OrchestrationEngine`, `ConversationManager`, `ResponseGenerator`, `SignalAggregator` |
 | **Agent Team** | `agent_team/` | 多人格协作、健康检查、海报生成 | `TeamSession`, `PosterGenerator`, `RewardEngine` |
 | **Personas** | `personas/{name}/` | 人格配置、策略集、表达 DNA | `personality.md`, `overrides.yaml`, `strategies/` |
 
@@ -107,7 +107,7 @@ export DASHSCOPE_API_KEY="your-key"  # 用于 text-embedding-v4
 
 ```bash
 python3 -m pytest tests/ -v
-# 54 passed (agent_team)
+# 305+ passed (orchestration + agent_team + quant + shared)
 ```
 
 ### 基本用法 —— 技术面分析（Zettaranc）
@@ -232,6 +232,21 @@ python -m agent_team.cli brainstorm --query "黄金走势" --agents zettaranc,bo
 海报保存在: ~/.personax/posters/sess_abc123
 ```
 
+### Signal Review 信号回顾
+
+```bash
+# 每周回顾
+python -m orchestration.review.cli weekly
+
+# 每月回顾
+python -m orchestration.review.cli monthly
+
+# 指定数据库路径
+python -m orchestration.review.cli weekly --db-path ~/.personax/my_review.db
+```
+
+每次分析产生的信号会自动存储到 SQLite，异步非阻塞，不影响主流程。
+
 ---
 
 ## 项目结构
@@ -244,7 +259,17 @@ personax/
 │   ├── response_generator.py# LLM 调用与 Prompt 构建（5 家后端）
 │   ├── router.py            # 查询路由
 │   ├── tool_cache.py        # 工具结果缓存
-│   └── signal_aggregator.py # 信号冲突聚合
+│   ├── signal_aggregator.py # 信号冲突聚合（旧版）
+│   ├── signals/             # SignalV2 聚合框架
+│   │   ├── v2.py           # SignalV2 + SignalPool
+│   │   └── aggregator.py   # Aggregator + 4种冲突处理策略
+│   ├── memory.py           # ContextMemory（对话记忆）
+│   ├── review/              # Signal Review 系统
+│   │   ├── event_bus.py    # EventBus（Fire & Forget）
+│   │   ├── signal_history.py   # 信号历史存储
+│   │   ├── evaluator.py    # BUY/SELL 信号评估
+│   │   ├── weight_adjuster.py   # 动态权重调整
+│   │   └── review_service.py    # 每周/每月回顾
 │
 ├── tools/                   # 工具计算层（纯函数/无状态）
 │   ├── quant/technical/     # 技术指标（8 种）
