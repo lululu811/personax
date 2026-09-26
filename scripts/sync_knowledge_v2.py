@@ -10,8 +10,6 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# Set API key directly (fallback from .env if available)
-os.environ.setdefault("DASHSCOPE_API_KEY", "REDACTED")
 
 from knowledge.chunker import MarkdownChunker
 from knowledge.embeddings import TongyiEmbedding
